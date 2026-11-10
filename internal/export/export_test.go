@@ -1,6 +1,7 @@
 package export
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func TestMarkdown(t *testing.T) {
-	it := catalog.Item{Session: source.Session{Tool: "claude", ID: "abc", Title: "Fix login", CWD: `D:\work\app`}}
+	it := catalog.Item{Session: source.Session{Tool: "claude", ID: "abc", Title: "Fix login", CWD: filepath.Join("work", "app")}}
 	md := Markdown(it, []source.Turn{{User: true, Text: "why?"}, {Text: "because"}})
 	for _, want := range []string{"# Fix login", "- **project:** app", "### You\n\nwhy?", "### Claude\n\nbecause"} {
 		if !strings.Contains(md, want) {

@@ -26,7 +26,8 @@ func TestClaudeRoundTrip(t *testing.T) {
 	sp := filepath.Join(home, ".claude", "settings.json")
 	_ = os.WriteFile(sp, []byte(orig), 0o600)
 
-	if err := Claude(`C:\Users\x y\jedkx-cli.exe`); err != nil {
+	exe := filepath.Join(home, "x y", "jedkx-cli.exe") // a space: the command must be quoted
+	if err := Claude(exe); err != nil {
 		t.Fatal(err)
 	}
 	got, _ := os.ReadFile(sp)
@@ -34,7 +35,7 @@ func TestClaudeRoundTrip(t *testing.T) {
 	if err := json.Unmarshal(got, &m); err != nil {
 		t.Fatal(err)
 	}
-	if m["theme"] != "custom:jedkx" || !strings.Contains(m["statusLine"].(map[string]any)["command"].(string), `"C:/Users/x y/jedkx-cli.exe" statusline`) {
+	if m["theme"] != "custom:jedkx" || !strings.Contains(m["statusLine"].(map[string]any)["command"].(string), `"`+filepath.ToSlash(exe)+`" statusline`) {
 		t.Fatalf("not applied: %s", got)
 	}
 	if strings.Index(string(got), `"model"`) > strings.Index(string(got), `"permissions"`) {
