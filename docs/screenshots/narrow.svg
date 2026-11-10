@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="334" height="602" viewBox="0 0 334 602" font-family="'Cascadia Mono','JetBrains Mono',Consolas,Menlo,monospace" font-size="14">
+<rect width="100%" height="100%" rx="10" fill="#020202" stroke="#1f1f1f"/>
+<path d="M10 0 H324 a10 10 0 0 1 10 10 V30 H0 V10 a10 10 0 0 1 10 -10 Z" fill="#0d0d0d"/><rect y="30" width="100%" height="1" fill="#1f1f1f"/>
+<circle cx="18" cy="15" r="5" fill="#3a3a3a"/><circle cx="34" cy="15" r="5" fill="#3a3a3a"/><circle cx="50" cy="15" r="5" fill="#ff3333"/><text x="167" y="19.5" fill="#6b6b6b" font-size="12" text-anchor="middle">beside a chat</text>
+<text x="24.4" y="59.0" fill="#f5f5f5" font-weight="700" xml:space="preserve">jedkx-cli</text>
+<text x="108.4" y="59.0" fill="#6b6b6b" xml:space="preserve">v0.1.0</text>
+<text x="175.6" y="59.0" fill="#6b6b6b" xml:space="preserve">SESSIONS  </text>
+<text x="259.6" y="59.0" fill="#00ff00" xml:space="preserve">7</text>
+<text x="268.0" y="59.0" fill="#6b6b6b" xml:space="preserve">  · …</text>
+<text x="16.0" y="95.0" fill="#6b6b6b" xml:space="preserve"> / search</text>
+<text x="209.2" y="95.0" fill="#ff3333" xml:space="preserve">[all]</text>
+<text x="251.2" y="95.0" fill="#6b6b6b" xml:space="preserve"> 1/5</text>
+<text x="284.8" y="95.0" fill="#6b6b6b" xml:space="preserve">  7 </text>
+<text x="16.0" y="113.0" fill="#2a2a2a" xml:space="preserve">────────────────────────────────────</text>
+<text x="32.8" y="131.0" fill="#ff3333" xml:space="preserve">▾ </text>
+<text x="49.6" y="131.0" fill="#00ff00" xml:space="preserve">● PINNED</text>
+<text x="125.2" y="131.0" fill="#2a2a2a" xml:space="preserve">────────────────────</text>
+<text x="301.6" y="131.0" fill="#bdbdbd" xml:space="preserve">1</text>
+<text x="16.0" y="149.0" fill="#ff3333" font-weight="700" xml:space="preserve">▌ </text>
+<text x="32.8" y="149.0" fill="#2a2a2a" xml:space="preserve">└─</text>
+<text x="49.6" y="149.0" fill="#ff3333" xml:space="preserve">● </text>
+<text x="66.4" y="149.0" fill="#f5f5f5" xml:space="preserve">◆</text>
+<text x="83.2" y="149.0" fill="#f5f5f5" font-weight="700" xml:space="preserve">Refund flow: idempote… </text>
+<text x="276.4" y="149.0" fill="#00ff00" xml:space="preserve">  4m</text>
+<text x="32.8" y="167.0" fill="#ff3333" xml:space="preserve">▾ </text>
+<text x="49.6" y="167.0" fill="#00ff00" xml:space="preserve">WEB-APP</text>
+<text x="116.8" y="167.0" fill="#2a2a2a" xml:space="preserve">─────────────────────</text>
+<text x="301.6" y="167.0" fill="#bdbdbd" xml:space="preserve">2</text>
+<text x="32.8" y="185.0" fill="#2a2a2a" xml:space="preserve">├─</text>
+<text x="49.6" y="185.0" fill="#2a2a2a" xml:space="preserve">─ </text>
+<text x="66.4" y="185.0" fill="#bdbdbd" xml:space="preserve">◇</text>
+<text x="83.2" y="185.0" fill="#e2e2e2" xml:space="preserve">Migrate settings page… </text>
+<text x="276.4" y="185.0" fill="#00ff00" xml:space="preserve"> 40m</text>
+<text x="32.8" y="203.0" fill="#2a2a2a" xml:space="preserve">└─</text>
+<text x="49.6" y="203.0" fill="#2a2a2a" xml:space="preserve">─ </text>
+<text x="66.4" y="203.0" fill="#f5f5f5" xml:space="preserve">◆</text>
+<text x="83.2" y="203.0" fill="#e2e2e2" xml:space="preserve">Dark mode tokens       </text>
+<text x="276.4" y="203.0" fill="#6b6b6b" xml:space="preserve">  1d</text>
+<text x="32.8" y="221.0" fill="#ff3333" xml:space="preserve">▾ </text>
+<text x="49.6" y="221.0" fill="#00ff00" xml:space="preserve">PAYMENTS-API</text>
+<text x="158.8" y="221.0" fill="#2a2a2a" xml:space="preserve">────────────────</text>
+<text x="301.6" y="221.0" fill="#bdbdbd" xml:space="preserve">1</text>
+<text x="32.8" y="239.0" fill="#2a2a2a" xml:space="preserve">└─</text>
+<text x="49.6" y="239.0" fill="#2a2a2a" xml:space="preserve">─ </text>
+<text x="66.4" y="239.0" fill="#f5f5f5" xml:space="preserve">◆</text>
+<text x="83.2" y="239.0" fill="#e2e2e2" xml:space="preserve">Flaky webhook retry t… </text>
+<text x="276.4" y="239.0" fill="#6b6b6b" xml:space="preserve">  3h</text>
+<text x="32.8" y="257.0" fill="#ff3333" xml:space="preserve">▾ </text>
+<text x="49.6" y="257.0" fill="#00ff00" xml:space="preserve">INFRA</text>
+<text x="100.0" y="257.0" fill="#2a2a2a" xml:space="preserve">───────────────────────</text>
+<text x="301.6" y="257.0" fill="#bdbdbd" xml:space="preserve">2</text>
+<text x="32.8" y="275.0" fill="#2a2a2a" xml:space="preserve">├─</text>
+<text x="49.6" y="275.0" fill="#2a2a2a" xml:space="preserve">─ </text>
+<text x="66.4" y="275.0" fill="#f5f5f5" xml:space="preserve">◆</text>
+<text x="83.2" y="275.0" fill="#e2e2e2" xml:space="preserve">Terraform: split prod… </text>
+<text x="276.4" y="275.0" fill="#6b6b6b" xml:space="preserve">  2d</text>
+<text x="32.8" y="293.0" fill="#2a2a2a" xml:space="preserve">└─</text>
+<text x="49.6" y="293.0" fill="#2a2a2a" xml:space="preserve">─ </text>
+<text x="66.4" y="293.0" fill="#bdbdbd" xml:space="preserve">◇</text>
+<text x="83.2" y="293.0" fill="#e2e2e2" xml:space="preserve">Cost report for the k… </text>
+<text x="276.4" y="293.0" fill="#6b6b6b" xml:space="preserve">  5d</text>
+<text x="32.8" y="311.0" fill="#ff3333" xml:space="preserve">▾ </text>
+<text x="49.6" y="311.0" fill="#00ff00" xml:space="preserve">DOCS-SITE</text>
+<text x="133.6" y="311.0" fill="#2a2a2a" xml:space="preserve">───────────────────</text>
+<text x="301.6" y="311.0" fill="#bdbdbd" xml:space="preserve">1</text>
+<text x="32.8" y="329.0" fill="#2a2a2a" xml:space="preserve">└─</text>
+<text x="49.6" y="329.0" fill="#2a2a2a" xml:space="preserve">─ </text>
+<text x="66.4" y="329.0" fill="#f5f5f5" xml:space="preserve">◆</text>
+<text x="83.2" y="329.0" fill="#e2e2e2" xml:space="preserve">Release notes for 2.4  </text>
+<text x="276.4" y="329.0" fill="#6b6b6b" xml:space="preserve">  9d</text>
+<text x="16.0" y="491.0" fill="#2a2a2a" xml:space="preserve">────────────────────────────────────</text>
+<text x="32.8" y="509.0" fill="#6b6b6b" xml:space="preserve">› </text>
+<text x="49.6" y="509.0" fill="#bdbdbd" xml:space="preserve">add idempotency keys to POST …</text>
+<text x="32.8" y="527.0" fill="#6b6b6b" xml:space="preserve">C:\dev\payments-api  4f1c2a9e  …</text>
+<text x="24.4" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">alt+shift+←→</text>
+<text x="133.6" y="563.0" fill="#6b6b6b" xml:space="preserve">resize</text>
+<text x="200.8" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">alt+←→</text>
+<text x="259.6" y="563.0" fill="#6b6b6b" xml:space="preserve">switch</text>
+<text x="24.4" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">enter</text>
+<text x="74.8" y="581.0" fill="#6b6b6b" xml:space="preserve">open chat</text>
+<text x="167.2" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">/</text>
+<text x="184.0" y="581.0" fill="#6b6b6b" xml:space="preserve">search</text>
+<text x="251.2" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">?</text>
+<text x="268.0" y="581.0" fill="#6b6b6b" xml:space="preserve">help</text>
+</svg>

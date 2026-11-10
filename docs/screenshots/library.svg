@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="906" height="602" viewBox="0 0 906 602" font-family="'Cascadia Mono','JetBrains Mono',Consolas,Menlo,monospace" font-size="14">
+<rect width="100%" height="100%" rx="10" fill="#020202" stroke="#1f1f1f"/>
+<path d="M10 0 H896 a10 10 0 0 1 10 10 V30 H0 V10 a10 10 0 0 1 10 -10 Z" fill="#0d0d0d"/><rect y="30" width="100%" height="1" fill="#1f1f1f"/>
+<circle cx="18" cy="15" r="5" fill="#3a3a3a"/><circle cx="34" cy="15" r="5" fill="#3a3a3a"/><circle cx="50" cy="15" r="5" fill="#ff3333"/><text x="453" y="19.5" fill="#6b6b6b" font-size="12" text-anchor="middle">jedkx-cli · library</text>
+<text x="326.8" y="59.0" fill="#f5f5f5" font-weight="700" xml:space="preserve">jedkx-cli</text>
+<text x="410.8" y="59.0" fill="#6b6b6b" xml:space="preserve">v0.1.0</text>
+<text x="478.0" y="59.0" fill="#6b6b6b" xml:space="preserve">· Nox is watching your sessions</text>
+<text x="24.4" y="77.0" fill="#e8e8eb" xml:space="preserve">    ▄████▄              ▄████▄      </text>
+<text x="326.8" y="77.0" fill="#2a2a2a" xml:space="preserve">──────────────────────────────</text>
+<text x="24.4" y="95.0" fill="#e8e8eb" xml:space="preserve">   ███  ███            ███  ███     </text>
+<text x="326.8" y="95.0" fill="#6b6b6b" xml:space="preserve">SESSIONS  </text>
+<text x="410.8" y="95.0" fill="#00ff00" xml:space="preserve">7</text>
+<text x="419.2" y="95.0" fill="#6b6b6b" xml:space="preserve">  ·  </text>
+<text x="461.2" y="95.0" fill="#f5f5f5" xml:space="preserve">claude</text>
+<text x="520.0" y="95.0" fill="#f5f5f5" xml:space="preserve">5</text>
+<text x="528.4" y="95.0" fill="#6b6b6b" xml:space="preserve">  ·  </text>
+<text x="570.4" y="95.0" fill="#bdbdbd" xml:space="preserve">codex</text>
+<text x="620.8" y="95.0" fill="#f5f5f5" xml:space="preserve">2</text>
+<text x="24.4" y="113.0" fill="#e8e8eb" xml:space="preserve">   ███  ███            ███  ███     </text>
+<text x="326.8" y="113.0" fill="#6b6b6b" xml:space="preserve">LATEST    </text>
+<text x="410.8" y="113.0" fill="#f5f5f5" xml:space="preserve">Refund flow: idempotency keys</text>
+<text x="24.4" y="131.0" fill="#e8e8eb" xml:space="preserve">    ▀████▀              ▀████▀      </text>
+<text x="410.8" y="131.0" fill="#bdbdbd" xml:space="preserve">payments-api</text>
+<text x="511.6" y="131.0" fill="#6b6b6b" xml:space="preserve"> · feature/PAY-142-refunds · 4m</text>
+<text x="326.8" y="149.0" fill="#6b6b6b" xml:space="preserve">SCAN      </text>
+<text x="410.8" y="149.0" fill="#6b6b6b" xml:space="preserve">38ms</text>
+<text x="24.4" y="167.0" fill="#e8e8eb" xml:space="preserve">             ▄      ▄               </text>
+<text x="24.4" y="185.0" fill="#e8e8eb" xml:space="preserve">              ▀▄▄▄▄▀                </text>
+<text x="24.4" y="239.0" fill="#f5f5f5" font-weight="700" xml:space="preserve">LIBRARY</text>
+<text x="83.2" y="239.0" fill="#6b6b6b" xml:space="preserve">  8</text>
+<text x="511.6" y="239.0" fill="#6b6b6b" xml:space="preserve"> all </text>
+<text x="553.6" y="239.0" fill="#6b6b6b" xml:space="preserve"> claude </text>
+<text x="620.8" y="239.0" fill="#6b6b6b" xml:space="preserve"> codex </text>
+<text x="679.6" y="239.0" fill="#6b6b6b" xml:space="preserve"> archived </text>
+<text x="763.6" y="239.0" fill="#2a2a2a" xml:space="preserve"> │</text>
+<text x="780.4" y="239.0" fill="#ff3333" xml:space="preserve">[skills &amp; m…</text>
+<text x="16.0" y="257.0" fill="#2a2a2a" xml:space="preserve">────────────────────────────────────────────────────────────────────────────────────────────────────────</text>
+<text x="32.8" y="275.0" fill="#ff3333" xml:space="preserve">instructions </text>
+<text x="142.0" y="275.0" fill="#e2e2e2" xml:space="preserve">CLAUDE                </text>
+<text x="326.8" y="275.0" fill="#6b6b6b" xml:space="preserve">claude · global         </text>
+<text x="528.4" y="275.0" fill="#bdbdbd" xml:space="preserve">Short, correct answers. Never push to sha…</text>
+<text x="16.0" y="293.0" fill="#ff3333" font-weight="700" xml:space="preserve">▌ </text>
+<text x="32.8" y="293.0" fill="#00ff00" xml:space="preserve">skill        </text>
+<text x="142.0" y="293.0" fill="#f5f5f5" font-weight="700" xml:space="preserve">commit-message        </text>
+<text x="326.8" y="293.0" fill="#6b6b6b" xml:space="preserve">claude · global         </text>
+<text x="528.4" y="293.0" fill="#bdbdbd" xml:space="preserve">Reads the diff and drafts a commit messag…</text>
+<text x="32.8" y="311.0" fill="#00ff00" xml:space="preserve">skill        </text>
+<text x="142.0" y="311.0" fill="#e2e2e2" xml:space="preserve">release-notes         </text>
+<text x="326.8" y="311.0" fill="#6b6b6b" xml:space="preserve">claude · global         </text>
+<text x="528.4" y="311.0" fill="#bdbdbd" xml:space="preserve">Turns merged PRs into release notes.</text>
+<text x="32.8" y="329.0" fill="#00ff00" xml:space="preserve">agent        </text>
+<text x="142.0" y="329.0" fill="#e2e2e2" xml:space="preserve">reviewer              </text>
+<text x="326.8" y="329.0" fill="#6b6b6b" xml:space="preserve">claude · global         </text>
+<text x="528.4" y="329.0" fill="#bdbdbd" xml:space="preserve">Reviews a diff for bugs before you merge.</text>
+<text x="32.8" y="347.0" fill="#ff3333" xml:space="preserve">instructions </text>
+<text x="142.0" y="347.0" fill="#e2e2e2" xml:space="preserve">CLAUDE                </text>
+<text x="326.8" y="347.0" fill="#6b6b6b" xml:space="preserve">claude · payments-api   </text>
+<text x="528.4" y="347.0" fill="#bdbdbd" xml:space="preserve">Payments API: money is in minor units, al…</text>
+<text x="32.8" y="365.0" fill="#00ff00" xml:space="preserve">command      </text>
+<text x="142.0" y="365.0" fill="#e2e2e2" xml:space="preserve">migrate               </text>
+<text x="326.8" y="365.0" fill="#6b6b6b" xml:space="preserve">claude · payments-api   </text>
+<text x="528.4" y="365.0" fill="#bdbdbd" xml:space="preserve">Create and check a database migration.</text>
+<text x="32.8" y="383.0" fill="#ff3333" xml:space="preserve">instructions </text>
+<text x="142.0" y="383.0" fill="#e2e2e2" xml:space="preserve">AGENTS                </text>
+<text x="326.8" y="383.0" fill="#6b6b6b" xml:space="preserve">codex · web-app         </text>
+<text x="528.4" y="383.0" fill="#bdbdbd" xml:space="preserve">Web app: pnpm, strict TypeScript, no defa…</text>
+<text x="32.8" y="401.0" fill="#00ff00" xml:space="preserve">prompt       </text>
+<text x="142.0" y="401.0" fill="#e2e2e2" xml:space="preserve">explain               </text>
+<text x="326.8" y="401.0" fill="#6b6b6b" xml:space="preserve">codex · global          </text>
+<text x="528.4" y="401.0" fill="#bdbdbd" xml:space="preserve">Explain this code to a new teammate.</text>
+<text x="16.0" y="491.0" fill="#2a2a2a" xml:space="preserve">────────────────────────────────────────────────────────────────────────────────────────────────────────</text>
+<text x="32.8" y="509.0" fill="#6b6b6b" xml:space="preserve">› </text>
+<text x="49.6" y="509.0" fill="#bdbdbd" xml:space="preserve">Reads the diff and drafts a commit message for review.</text>
+<text x="32.8" y="527.0" fill="#6b6b6b" xml:space="preserve">C:\Users\you\.claude\skills\commit-message\SKILL.md</text>
+<text x="24.4" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">enter</text>
+<text x="74.8" y="563.0" fill="#6b6b6b" xml:space="preserve">open file</text>
+<text x="167.2" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">f</text>
+<text x="184.0" y="563.0" fill="#6b6b6b" xml:space="preserve">folder</text>
+<text x="251.2" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">c</text>
+<text x="268.0" y="563.0" fill="#6b6b6b" xml:space="preserve">copy path</text>
+<text x="24.4" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">tab</text>
+<text x="58.0" y="581.0" fill="#6b6b6b" xml:space="preserve">next tab</text>
+<text x="142.0" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">esc</text>
+<text x="175.6" y="581.0" fill="#6b6b6b" xml:space="preserve">back to chats</text>
+<text x="301.6" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">ctrl+r</text>
+<text x="360.4" y="581.0" fill="#6b6b6b" xml:space="preserve">rescan</text>
+<text x="427.6" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">?</text>
+<text x="444.4" y="581.0" fill="#6b6b6b" xml:space="preserve">help</text>
+</svg>

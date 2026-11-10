@@ -1,0 +1,63 @@
+# Release: git tag v0.1.0 && git push origin v0.1.0  → GitHub Actions runs this.
+version: 2
+project_name: jedkx-cli
+
+before:
+  hooks:
+    - go mod verify
+    - go test ./...
+
+builds:
+  - id: jedkx-cli
+    main: ./cmd/jedkx-cli
+    binary: jedkx-cli
+    env: [CGO_ENABLED=0]
+    goos: [windows, linux, darwin]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w -X github.com/jedkx/jedkx-cli/internal/app.Version={{ .Tag }}
+
+# Plain binaries (no zip): the self-updater downloads jedkx-cli_<os>_<arch>[.exe]
+# and verifies it against checksums.txt. Keep these names in sync with
+# internal/update.AssetName().
+archives:
+  - formats: [binary]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+changelog:
+  sort: asc
+  filters:
+    exclude: ["^docs:", "^test:", "^chore:"]
+
+release:
+  github:
+    owner: jedkx
+    name: jedkx-cli
+  footer: |
+    **Install (Windows):** `irm https://raw.githubusercontent.com/jedkx/jedkx-cli/main/scripts/install.ps1 | iex`
+    **Install (macOS/Linux):** `curl -fsSL https://raw.githubusercontent.com/jedkx/jedkx-cli/main/scripts/install.sh | sh`
+    Or download `jedkx-cli_windows_amd64.exe` and double-click it.
+
+# Package managers — enable once the target repos exist (create the scoop/homebrew/winget repos, add a PKG_TOKEN secret).
+# scoops:
+#   - repository: { owner: jedkx, name: scoop-bucket, token: "{{ .Env.PKG_TOKEN }}" }
+#     homepage: https://github.com/jedkx/jedkx-cli
+#     description: Terminal home for your AI coding sessions.
+#     license: MIT
+# winget:
+#   - name: jedkx-cli
+#     publisher: jedkx
+#     short_description: Terminal home for your AI coding sessions.
+#     license: MIT
+#     repository: { owner: jedkx, name: winget-pkgs, branch: "jedkx-cli-{{ .Version }}", token: "{{ .Env.PKG_TOKEN }}",
+#                   pull_request: { enabled: true, base: { owner: microsoft, name: winget-pkgs, branch: master } } }
+# brews:
+#   - repository: { owner: jedkx, name: homebrew-tap, token: "{{ .Env.PKG_TOKEN }}" }
+#     homepage: https://github.com/jedkx/jedkx-cli
+#     description: Terminal home for your AI coding sessions.
+#     license: MIT
