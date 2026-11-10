@@ -98,7 +98,8 @@ func wt(cmd *exec.Cmd, sub, title string, extra ...string) error {
 	}
 	// wt.exe splits its command line on ';' — a title like "fix; test" would break it
 	title = strings.ReplaceAll(title, ";", `\;`)
-	args := append([]string{"-w", "0", sub, "--title", title}, extra...)
+	// the chat keeps this title: Claude / Codex would rename the tab otherwise
+	args := append([]string{"-w", "0", sub, "--title", title, "--suppressApplicationTitle"}, extra...)
 	if setup.ProfileReady() { // same jedkx look in the new tab or pane
 		args = append(args, "-p", setup.ProfileName)
 	}

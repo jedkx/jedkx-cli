@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"unicode/utf16"
@@ -317,7 +318,7 @@ func sameJSON(a, b json.RawMessage) bool {
 // ---------------------------------------------------------------- Windows Terminal
 
 // Terminal installs the jedkx scheme and profile as a WT settings fragment.
-func Terminal(exe string) error {
+func Terminal(_ string) error {
 	if runtime.GOOS != "windows" {
 		return ErrNoTerminal
 	}
@@ -325,6 +326,33 @@ func Terminal(exe string) error {
 	if dir == "" {
 		return errors.New("LOCALAPPDATA is not set")
 	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	if err := config.WriteAtomic(filepath.Join(dir, "jedkx-cli.json"), fragment()); err != nil {
+		return err
+	}
+	s := loadState()
+	s.Terminal = true
+	err := makeDefault(&s)
+	return errors.Join(err, saveState(s))
+}
+
+// RefreshTerminal rewrites the fragment when this version's profile differs
+// from the one on disk (after an update). Only if the terminal part is applied.
+func RefreshTerminal() {
+	if runtime.GOOS != "windows" || !loadState().Terminal || !ProfileReady() {
+		return
+	}
+	f := filepath.Join(FragmentDir(), "jedkx-cli.json")
+	if old, err := os.ReadFile(f); err == nil && string(old) == string(fragment()) {
+		return
+	}
+	_ = config.WriteAtomic(f, fragment())
+}
+
+// fragment is the WT settings fragment: the jedkx scheme and the jedkx-cli profile.
+func fragment() []byte {
 	frag := map[string]any{
 		"schemes": []map[string]string{{
 			"name": "jedkx", "background": void, "foreground": text,
@@ -339,29 +367,29 @@ func Terminal(exe string) error {
 			"white": "#d6d6d6", "brightWhite": text,
 		}},
 		"profiles": []map[string]any{{
-			"name":                     ProfileName,
-			"commandline":              quote(exe),
-			"colorScheme":              "jedkx",
-			"font":                     map[string]any{"face": "Cascadia Mono", "size": 11},
-			"padding":                  "14, 10",
-			"cursorShape":              "bar",
-			"scrollbarState":           "hidden",
-			"tabTitle":                 "jedkx-cli",
-			"suppressApplicationTitle": true,
-			"closeOnExit":              "always",
+			// a normal shell in the jedkx colours; type jedkx-cli to open the list
+			"name":              ProfileName,
+			"commandline":       shell(),
+			"startingDirectory": "%USERPROFILE%",
+			"colorScheme":       "jedkx",
+			"font":              map[string]any{"face": "Cascadia Mono", "size": 11},
+			"padding":           "14, 10",
+			"cursorShape":       "bar",
+			"scrollbarState":    "hidden",
+			"closeOnExit":       "always", // panes opened beside the list close with their chat
 		}},
 	}
 	b, _ := json.MarshalIndent(frag, "", "  ")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
+	return append(b, '\n')
+}
+
+// shell is what the jedkx-cli profile runs: PowerShell 7 when installed,
+// else Windows PowerShell.
+func shell() string {
+	if p, err := exec.LookPath("pwsh.exe"); err == nil {
+		return quote(p) + " -NoLogo"
 	}
-	if err := config.WriteAtomic(filepath.Join(dir, "jedkx-cli.json"), append(b, '\n')); err != nil {
-		return err
-	}
-	s := loadState()
-	s.Terminal = true
-	err := makeDefault(&s) // your terminals get the jedkx colours
-	return errors.Join(err, saveState(s))
+	return "powershell.exe -NoLogo"
 }
 
 // ProfileReady reports whether new tabs/panes can use the jedkx-cli profile.

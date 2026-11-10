@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -57,6 +58,7 @@ func main() {
 		return
 	}
 	update.Cleanup()
+	setup.RefreshTerminal() // a new version may bring a changed terminal profile
 	install.SyncVersion()
 	cfg := config.Load()
 
@@ -145,7 +147,7 @@ func wizard() (err error) {
 		fmt.Println()
 	}
 	fmt.Println("  Installs for your user only (no admin) into " + ui.Dim(paths.InstallDir()) + " and adds it to PATH.")
-	fmt.Println("  Pick one — Enter takes the first:")
+	fmt.Println("  Pick one or more (e.g. 2 4) — Enter takes the first:")
 	fmt.Println("  " + ui.Rule(66))
 	type choice struct {
 		what, detail  string
@@ -171,13 +173,17 @@ func wizard() (err error) {
 	}
 	fmt.Println("  " + ui.Rule(66))
 	fmt.Println("  " + ui.Dim("touched settings are backed up next to this file first · undo: jedkx-cli setup --undo"))
-	pick := ask(r, "Choose", last)
+	picks := askMany(r, "Choose", last)
+	pick := 0
+	if len(picks) > 0 {
+		pick = picks[0]
+	}
 	if pick == 0 {
 		fmt.Println("  Nothing changed.")
 		pause(r)
 		return nil
 	}
-	if installed && pick == last {
+	if installed && len(picks) == 1 && pick == last {
 		fmt.Print("\n  " + ui.Bold("Remove jedkx-cli from this PC?") + " " + ui.Dim("[y/N]") + " ")
 		if !yes(r, false) {
 			fmt.Println("  Nothing changed.")
@@ -192,9 +198,36 @@ func wizard() (err error) {
 		pause(r)
 		return nil
 	}
-	c := choices[pick-1]
-	parts := c.parts
-	show := map[string]bool{"claude": c.claude, "codex": c.codex}
+	// several picks add up: "2 4" = Claude Code look + terminal profile. Only
+	// "Claude only" / "Codex only" limit whose chats are listed.
+	var parts setup.Parts
+	show := map[string]bool{}
+	limited := false
+	for _, p := range picks {
+		if installed && p == last {
+			continue // uninstall only on its own
+		}
+		c := choices[p-1]
+		parts.Claude = parts.Claude || c.parts.Claude
+		parts.Terminal = parts.Terminal || c.parts.Terminal
+		if c.claude != c.codex {
+			limited = true
+			show["claude"] = show["claude"] || c.claude
+			show["codex"] = show["codex"] || c.codex
+		}
+	}
+	if !limited {
+		show = map[string]bool{"claude": true, "codex": true}
+	}
+	if len(picks) > 1 {
+		var names []string
+		for _, p := range picks {
+			if !(installed && p == last) {
+				names = append(names, choices[p-1].what)
+			}
+		}
+		fmt.Println("  " + ui.Dim("→ "+strings.Join(names, " + ")))
+	}
 
 	total := 1 // install
 	if parts.Claude || parts.Terminal {
@@ -487,6 +520,58 @@ func doSetup(args []string) error {
 }
 
 // ask reads a number 1..n; Enter = 1, q / n / no = 0 (cancel). Asks again on a typo.
+// askMany reads one or more choices ("2", "2 4", "2,4", "2-4" = 2,3,4).
+// nil means cancel.
+func askMany(r *bufio.Reader, prompt string, n int) []int {
+	for {
+		fmt.Print("\n  " + ui.Bold(prompt) + " " + ui.Dim(fmt.Sprintf("[1-%d, several: 2 4, enter = 1, q = cancel]", n)) + " ")
+		line, err := r.ReadString('\n')
+		a := strings.ToLower(strings.TrimSpace(line))
+		switch {
+		case a == "":
+			if err != nil {
+				return nil
+			}
+			return []int{1}
+		case a == "q" || a == "n" || a == "no" || a == "h" || a == "hayır":
+			return nil
+		}
+		if v, ok := parsePicks(a, n); ok {
+			return v
+		}
+		fmt.Println("  " + ui.Accent(fmt.Sprintf("type numbers from 1 to %d, e.g. 2 or 2 4", n)))
+	}
+}
+
+// parsePicks turns "2 4", "2,4" or "2-4" into sorted, distinct numbers in 1..n.
+func parsePicks(a string, n int) ([]int, bool) {
+	seen := map[int]bool{}
+	for _, f := range strings.FieldsFunc(a, func(r rune) bool { return r == ' ' || r == ',' || r == ';' || r == '+' }) {
+		lo, hi := f, f
+		if i := strings.Index(f, "-"); i > 0 {
+			lo, hi = f[:i], f[i+1:]
+		}
+		x, e1 := strconv.Atoi(lo)
+		y, e2 := strconv.Atoi(hi)
+		if e1 != nil || e2 != nil || x < 1 || y > n || x > y {
+			return nil, false
+		}
+		for v := x; v <= y; v++ {
+			seen[v] = true
+		}
+	}
+	if len(seen) == 0 {
+		return nil, false
+	}
+	var out []int
+	for v := 1; v <= n; v++ {
+		if seen[v] {
+			out = append(out, v)
+		}
+	}
+	return out, true
+}
+
 func ask(r *bufio.Reader, prompt string, n int) int {
 	for {
 		fmt.Print("\n  " + ui.Bold(prompt) + " " + ui.Dim(fmt.Sprintf("[1-%d, enter = 1, q = cancel]", n)) + " ")
