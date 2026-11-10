@@ -116,7 +116,7 @@ func Apply(exe string, p Parts, out io.Writer) error {
 		fmt.Fprintf(out, "  · %-12s skipped: %v\n", "Terminal", errT)
 		errT = nil
 	} else {
-		report(out, "Terminal", "jedkx-cli profile (default, jedkx colours), grey tabs  (Windows Terminal)", errT)
+		report(out, "Terminal", "jedkx-cli profile in the jedkx colours, grey tabs  (Windows Terminal)", errT)
 	}
 	return errors.Join(errC, errT)
 }
@@ -345,13 +345,16 @@ func RefreshTerminal() {
 	if runtime.GOOS != "windows" || !s.Terminal || !ProfileReady() {
 		return
 	}
-	for k := range wtKeys() { // a new version sets a key the old one did not
+	// a new version sets a key the old one did not, or no longer sets one
+	// (then makeDefault gives your old value back)
+	changed := len(s.OurWT) != len(wtKeys())
+	for k := range wtKeys() {
 		if _, ok := s.OurWT[k]; !ok {
-			if makeDefault(&s) == nil {
-				_ = saveState(s)
-			}
-			break
+			changed = true
 		}
+	}
+	if changed && makeDefault(&s) == nil {
+		_ = saveState(s)
 	}
 	f := filepath.Join(FragmentDir(), "jedkx-cli.json")
 	if old, err := os.ReadFile(f); err == nil && string(old) == string(fragment()) {
@@ -400,6 +403,13 @@ func shell() string {
 	}
 	return "powershell.exe -NoLogo"
 }
+
+// TerminalApplied reports whether the Windows Terminal part is set up.
+func TerminalApplied() bool { return loadState().Terminal }
+
+// TerminalHint is how to make the jedkx-cli profile the one a new Windows
+// Terminal opens with; jedkx-cli never changes your default profile.
+const TerminalHint = "To open every new terminal in the jedkx look: Windows Terminal › Settings (ctrl+,) › Startup › Default profile → jedkx-cli › Save"
 
 // ProfileReady reports whether new tabs/panes can use the jedkx-cli profile.
 func ProfileReady() bool {
@@ -482,11 +492,9 @@ var wtTheme = map[string]any{
 // An older setup also set profiles.defaults.colorScheme; applying again gives
 // it back.
 func wtKeys() map[string]any {
-	return map[string]any{
-		"theme":                         "jedkx",
-		"defaultProfile":                FragmentProfileGUID("jedkx-cli", ProfileName),
-		"profiles.defaults.colorScheme": "jedkx", // every profile in the jedkx colours; undo gives yours back
-	}
+	// only the window chrome: your profiles and your default profile stay yours
+	// (TerminalHint tells you how to make jedkx-cli the default yourself)
+	return map[string]any{"theme": "jedkx"}
 }
 
 // makeDefault applies wtKeys to each WT settings file, adds the jedkx window

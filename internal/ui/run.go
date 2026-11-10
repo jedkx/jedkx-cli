@@ -44,6 +44,9 @@ func OK(s string) string     { return sOK.Render(s) }
 func Bold(s string) string   { return sBold.Render(s) }
 func Muted(s string) string  { return sMuted.Render(s) }
 
+// Alert is a bold red line the user must not miss.
+func Alert(s string) string { return sAccent.Bold(true).Render(s) }
+
 // Rule is a faint horizontal line for the CLI screens.
 func Rule(w int) string { return sRule.Render(strings.Repeat("─", w)) }
 

@@ -138,6 +138,10 @@ func wizard() (err error) {
 					return fail(r, fmt.Errorf("update failed: %w", err))
 				}
 				fmt.Println("\n  " + ui.OK("✓ updated to "+app.Version+".") + " Open a new terminal and type " + ui.Accent("jedkx-cli"))
+				if setup.TerminalApplied() && runtime.GOOS == "windows" {
+					fmt.Println()
+					terminalHint()
+				}
 				pause(r)
 				return nil
 			}
@@ -286,6 +290,9 @@ func wizard() (err error) {
 		}
 	}
 	fmt.Println("\n  " + ui.Rule(58))
+	if parts.Terminal && runtime.GOOS == "windows" {
+		terminalHint()
+	}
 	fmt.Println("  " + ui.OK("✓ ready.") + " Close every Windows Terminal and Claude Code window,")
 	fmt.Println("  open Windows Terminal again and type " + ui.Accent("jedkx-cli") + ".")
 	fmt.Println("  " + ui.Dim("You can delete the downloaded file."))
@@ -514,9 +521,19 @@ func doSetup(args []string) error {
 	}
 	fmt.Println("\n  " + ui.OK("✓ done.") + " Restart Claude Code to see the status line and theme.")
 	if parts.Terminal && runtime.GOOS == "windows" {
-		fmt.Println("  Restart Windows Terminal once to see its new colours.")
+		fmt.Println()
+		terminalHint()
 	}
 	return nil
+}
+
+// terminalHint: jedkx-cli adds its profile but leaves your default alone, so
+// say loudly how to switch.
+func terminalHint() {
+	fmt.Println("  " + ui.Alert("!! The jedkx terminal look is NOT your default yet."))
+	fmt.Println("  " + ui.Alert("!! "+setup.TerminalHint))
+	fmt.Println("  " + ui.Dim("   (or open it once from the ⌄ menu next to the tabs)"))
+	fmt.Println()
 }
 
 // ask reads a number 1..n; Enter = 1, q / n / no = 0 (cancel). Asks again on a typo.
