@@ -1,7 +1,7 @@
 # CLAUDE.md — jedkx-cli
 
 Go CLI/TUI that lists and resumes Claude Code + Codex sessions. Public repo `github.com/jedkx/jedkx-cli`, English code/docs.
-Architecture map: `README.md › Architecture`; platforms: `docs/PLATFORMS.md`.
+Architecture map: `README.md › Development`; platforms: `docs/PLATFORMS.md`.
 
 ## Rules
 
@@ -24,3 +24,5 @@ Needs Go 1.27+ on PATH (a per-user SDK install works).
 gofmt -l . ; go vet ./... ; go test ./...
 go build -trimpath -ldflags "-s -w -X github.com/jedkx/jedkx-cli/internal/app.Version=v0.1.0" -o dist/jedkx-cli.exe ./cmd/jedkx-cli
 ```
+
+Before a release, by hand on Windows: run the exe → pick a choice → new terminal → `jedkx-cli` works; `uninstall --dry-run` lists only existing items; after uninstall the user PATH is unchanged and Settings › Apps has no entry; `update` from an older tag swaps the binary.
