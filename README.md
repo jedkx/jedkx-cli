@@ -120,9 +120,8 @@ jedkx-cli uninstall           remove it (--dry-run, --purge, --yes)
 
 - **Claude Code:** a `jedkx` theme, the status line, spinner words and tips
   (in `~/.claude/settings.json`, other keys left as they are)
-- **Windows Terminal:** a `jedkx-cli` profile (PowerShell in the jedkx colours) as the default profile,
-  and a grey tab theme. New terminals open a normal shell; type `jedkx-cli` for the list.
-  Your other profiles aren't touched.
+- **Windows Terminal:** the jedkx colours for every profile, a `jedkx-cli` profile (PowerShell) as the
+  default, and a grey tab theme. New terminals open a normal shell; type `jedkx-cli` for the list.
 
 `jedkx-cli setup --undo` (and uninstall) puts the old values back. If you changed one of them yourself
 after setup, undo leaves your value alone.

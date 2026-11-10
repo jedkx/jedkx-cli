@@ -341,8 +341,17 @@ func Terminal(_ string) error {
 // RefreshTerminal rewrites the fragment when this version's profile differs
 // from the one on disk (after an update). Only if the terminal part is applied.
 func RefreshTerminal() {
-	if runtime.GOOS != "windows" || !loadState().Terminal || !ProfileReady() {
+	s := loadState()
+	if runtime.GOOS != "windows" || !s.Terminal || !ProfileReady() {
 		return
+	}
+	for k := range wtKeys() { // a new version sets a key the old one did not
+		if _, ok := s.OurWT[k]; !ok {
+			if makeDefault(&s) == nil {
+				_ = saveState(s)
+			}
+			break
+		}
 	}
 	f := filepath.Join(FragmentDir(), "jedkx-cli.json")
 	if old, err := os.ReadFile(f); err == nil && string(old) == string(fragment()) {
@@ -474,8 +483,9 @@ var wtTheme = map[string]any{
 // it back.
 func wtKeys() map[string]any {
 	return map[string]any{
-		"theme":          "jedkx",
-		"defaultProfile": FragmentProfileGUID("jedkx-cli", ProfileName),
+		"theme":                         "jedkx",
+		"defaultProfile":                FragmentProfileGUID("jedkx-cli", ProfileName),
+		"profiles.defaults.colorScheme": "jedkx", // every profile in the jedkx colours; undo gives yours back
 	}
 }
 

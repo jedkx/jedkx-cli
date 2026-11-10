@@ -113,8 +113,8 @@ func TestDefaultProfileRoundTrip(t *testing.T) {
 	if v, _ := o.get("defaultProfile"); !strings.Contains(string(v), FragmentProfileGUID("jedkx-cli", ProfileName)) {
 		t.Fatalf("the jedkx-cli profile must be the default: %s", v)
 	}
-	if _, ok := o.getPath("profiles.defaults.colorScheme"); ok {
-		t.Fatal("other profiles must keep their own colours")
+	if v, _ := o.getPath("profiles.defaults.colorScheme"); string(v) != `"jedkx"` {
+		t.Fatalf("every profile must use the jedkx colours: %s", v)
 	}
 	if v, _ := o.get("theme"); string(v) != `"jedkx"` {
 		t.Fatalf("window theme not set: %s", v)
@@ -153,7 +153,7 @@ func TestWindowsTerminalRoundTrip(t *testing.T) {
 		t.Skip(err)
 	}
 	o, _ := readObject(wt)
-	for path, want := range map[string]string{"theme": `"jedkx"`, "profiles.defaults.colorScheme": `"Minimal Dark"`} {
+	for path, want := range map[string]string{"theme": `"jedkx"`, "profiles.defaults.colorScheme": `"jedkx"`} {
 		if v, _ := o.getPath(path); string(v) != want {
 			t.Fatalf("%s = %s, want %s", path, v, want)
 		}
@@ -184,21 +184,31 @@ func TestBackupKeepsTree(t *testing.T) {
 	}
 }
 
-// An older setup coloured every profile; applying again gives their colours back.
-func TestReapplyRestoresProfileColours(t *testing.T) {
+// After an update that sets a new WT key, the next start applies it, and undo still gives the old value back.
+func TestRefreshAppliesNewKeys(t *testing.T) {
 	home := fakeHome(t)
 	wt := filepath.Join(home, "local", "Packages", "Microsoft.WindowsTerminal_8wekyb3d8bbwe", "LocalState", "settings.json")
 	_ = os.MkdirAll(filepath.Dir(wt), 0o755)
-	_ = os.WriteFile(wt, []byte("{\n  \"profiles\": {\n    \"defaults\": {\n      \"colorScheme\": \"jedkx\"\n    }\n  }\n}\n"), 0o600)
-	s := state{
-		PrevWT: map[string]map[string]json.RawMessage{wt: {"profiles.defaults.colorScheme": json.RawMessage(`"Campbell"`)}},
-		OurWT:  map[string]json.RawMessage{"profiles.defaults.colorScheme": json.RawMessage(`"jedkx"`)},
-	}
-	if err := makeDefault(&s); err != nil {
+	orig := "{\n  \"profiles\": {\n    \"defaults\": {\n      \"colorScheme\": \"Minimal Dark\"\n    }\n  }\n}\n"
+	_ = os.WriteFile(wt, []byte(orig), 0o600)
+	if err := Terminal("x"); err != nil {
 		t.Skip(err)
 	}
+	s := loadState() // pretend an older version: it never set the colour scheme
+	delete(s.OurWT, "profiles.defaults.colorScheme")
+	delete(s.PrevWT[wt], "profiles.defaults.colorScheme")
 	o, _ := readObject(wt)
-	if v, _ := o.getPath("profiles.defaults.colorScheme"); string(v) != `"Campbell"` {
-		t.Fatalf("old profile colours not given back: %s", v)
+	_ = o.setPath("profiles.defaults.colorScheme", json.RawMessage(`"Minimal Dark"`))
+	_ = writeObject(wt, o)
+	_ = saveState(s)
+
+	RefreshTerminal()
+	o, _ = readObject(wt)
+	if v, _ := o.getPath("profiles.defaults.colorScheme"); string(v) != `"jedkx"` {
+		t.Fatalf("new key not applied: %s", v)
+	}
+	_ = Undo(io.Discard)
+	if back, _ := os.ReadFile(wt); string(back) != orig {
+		t.Fatalf("not restored:\n%s", back)
 	}
 }
