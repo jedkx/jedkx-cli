@@ -80,7 +80,7 @@ func TestTabHook(t *testing.T) {
 		t.Fatal(err)
 	}
 	got, _ = os.ReadFile(sp)
-	if strings.Count(string(got), "_tabcolor") != 1 {
+	if strings.Count(string(got), "_tabcolor") != 3 || !strings.Contains(string(got), "_tabcolor done") {
 		t.Fatalf("hook doubled: %s", got)
 	}
 	_ = Undo(io.Discard)

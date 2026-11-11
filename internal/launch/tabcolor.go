@@ -22,6 +22,17 @@ var tabGreys = []string{"2b/2b/2b", "36/34/34", "41/3d/3d", "4b/48/48", "30/30/3
 
 const tabSlot = 200
 
+// doneColour marks a tab whose chat has finished and waits for you (the Stop
+// hook); your next message (UserPromptSubmit) gives the project grey back.
+const (
+	doneColour = "5a/1e/1e"
+	doneSlot   = 206
+)
+
+func doneSequence() string {
+	return fmt.Sprintf("\x1b]4;%d;rgb:%s\x1b\\\x1b[2;15;%d,|", doneSlot, doneColour, doneSlot)
+}
+
 // tabSequence is what goes to the terminal for this project folder.
 func tabSequence(dir string) string {
 	root := dir
@@ -39,7 +50,12 @@ func tabSequence(dir string) string {
 }
 
 // RunTabColor is the hook's body; it never fails (a hook must not break a chat).
-func RunTabColor() int {
+// "done" (the Stop hook) marks the tab as finished.
+func RunTabColor(args []string) int {
+	if len(args) > 0 && args[0] == "done" {
+		writeToClaudeConsole(doneSequence())
+		return 0
+	}
 	dir, err := os.Getwd()
 	if err != nil {
 		return 0

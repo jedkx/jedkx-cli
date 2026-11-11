@@ -57,7 +57,7 @@ func main() {
 	}
 	// Claude's SessionStart hook: paint the tab in the project's grey, never fail.
 	if len(os.Args) > 1 && os.Args[1] == launch.TabColorCommand {
-		os.Exit(launch.RunTabColor())
+		os.Exit(launch.RunTabColor(os.Args[2:]))
 	}
 	// Claude calls this on every message: no config, no update work, never fail.
 	if len(os.Args) > 1 && os.Args[1] == "statusline" {

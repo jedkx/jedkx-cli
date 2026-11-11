@@ -297,29 +297,32 @@ func withTabHook(hooks json.RawMessage, exe string) json.RawMessage {
 	if all == nil { // no hooks yet ("null")
 		all = map[string]json.RawMessage{}
 	}
-	var groups []map[string]any
-	_ = json.Unmarshal(all["SessionStart"], &groups)
-	keep := []map[string]any{}
-	for _, g := range groups {
-		list, _ := g["hooks"].([]any)
-		var rest []any
-		for _, h := range list {
-			cmd, _ := h.(map[string]any)["command"].(string)
-			if strings.Contains(cmd, "_tabcolor") || strings.Contains(strings.ToLower(cmd), "tabstate") {
-				continue
+	// a chat starts or you send a message: the project's grey; it finishes: "done"
+	for event, arg := range map[string]string{"SessionStart": "", "UserPromptSubmit": "", "Stop": " done"} {
+		var groups []map[string]any
+		_ = json.Unmarshal(all[event], &groups)
+		keep := []map[string]any{}
+		for _, g := range groups {
+			list, _ := g["hooks"].([]any)
+			var rest []any
+			for _, h := range list {
+				cmd, _ := h.(map[string]any)["command"].(string)
+				if strings.Contains(cmd, "_tabcolor") || strings.Contains(strings.ToLower(cmd), "tabstate") {
+					continue
+				}
+				rest = append(rest, h)
 			}
-			rest = append(rest, h)
+			if len(rest) > 0 {
+				g["hooks"] = rest
+				keep = append(keep, g)
+			}
 		}
-		if len(rest) > 0 {
-			g["hooks"] = rest
-			keep = append(keep, g)
-		}
+		keep = append(keep, map[string]any{"hooks": []any{map[string]any{
+			"type": "command", "command": quote(exe) + " _tabcolor" + arg, "timeout": 5,
+		}}})
+		b, _ := json.Marshal(keep)
+		all[event] = b
 	}
-	keep = append(keep, map[string]any{"hooks": []any{map[string]any{
-		"type": "command", "command": quote(exe) + " _tabcolor", "timeout": 5,
-	}}})
-	b, _ := json.Marshal(keep)
-	all["SessionStart"] = b
 	out, _ := json.Marshal(all)
 	return out
 }
@@ -716,8 +719,8 @@ func RefreshClaude() {
 	if !s.Claude {
 		return
 	}
-	if _, ok := s.OurClaude["hooks"]; !ok && runtime.GOOS == "windows" {
-		// set up by a version without the tab colour hook: add it once
+	if !strings.Contains(string(s.OurClaude["hooks"]), "_tabcolor done") && runtime.GOOS == "windows" {
+		// set up by a version without (all of) the tab colour hooks: add them once
 		if exe := paths.InstalledExe(); exe != "" {
 			_ = Claude(exe)
 		}
