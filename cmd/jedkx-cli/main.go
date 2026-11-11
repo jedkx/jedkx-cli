@@ -686,5 +686,7 @@ func doStats(cfg config.Config, args []string) error {
 	fmt.Println(ui.Bold(fmt.Sprintf("  token use · last %d days", *days)))
 	fmt.Println()
 	stats.Print(os.Stdout, stats.Collect(res.Items, *days))
+	fmt.Println()
+	stats.PrintWindow(os.Stdout, "last 5 h", stats.Recent(res.Items, time.Now().Add(-5*time.Hour)))
 	return nil
 }

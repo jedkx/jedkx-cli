@@ -114,3 +114,46 @@ func short(n int) string {
 	}
 	return fmt.Sprint(n)
 }
+
+// Window is token use since a moment (e.g. the last 5 hours — Claude's usage
+// limits count in such windows): replies, input + output, cache reads.
+type Window struct {
+	Since            time.Time
+	Replies, In, Out int
+	CacheRead, Chats int
+}
+
+// Recent sums usage from since until now.
+func Recent(items []catalog.Item, since time.Time) Window {
+	w := Window{Since: since}
+	for _, it := range items {
+		if it.Updated.Before(since) {
+			continue
+		}
+		ur, ok := catalog.Adapter(it.Tool).(source.UsageReader)
+		if !ok {
+			continue
+		}
+		used := false
+		for _, u := range ur.Usage(it.Session) {
+			if u.Time.Before(since) {
+				continue
+			}
+			used = true
+			w.Replies++
+			w.In += u.In
+			w.Out += u.Out
+			w.CacheRead += u.CacheRead
+		}
+		if used {
+			w.Chats++
+		}
+	}
+	return w
+}
+
+// PrintWindow writes one line for a window, e.g. "last 5 h  12 chats · 340 replies · …".
+func PrintWindow(w io.Writer, label string, x Window) {
+	fmt.Fprintf(w, "  %-9s %d chats · %d replies · in %s · out %s · cache read %s\n",
+		label, x.Chats, x.Replies, short(x.In), short(x.Out), short(x.CacheRead))
+}
