@@ -77,21 +77,36 @@ func (r release) asset(name string) string {
 	return ""
 }
 
+// latest finds the newest release without the GitHub API: github.com answers
+// /releases/latest with a redirect to /releases/tag/<tag>, and assets live at
+// /releases/download/<tag>/<name>. The API allows only 60 calls an hour per IP
+// without a login — shared offices and busy days ran out of it.
 func latest(timeout time.Duration) (release, error) {
 	var r release
-	req, _ := http.NewRequest("GET", "https://api.github.com/repos/"+app.Repo+"/releases/latest", nil)
-	req.Header.Set("Accept", "application/vnd.github+json")
+	base := "https://github.com/" + app.Repo + "/releases"
+	req, _ := http.NewRequest("HEAD", base+"/latest", nil)
 	req.Header.Set("User-Agent", app.Name+"/"+app.Version)
-	resp, err := (&http.Client{Timeout: timeout}).Do(req)
+	c := &http.Client{Timeout: timeout, CheckRedirect: func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse // read the redirect, do not follow it
+	}}
+	resp, err := c.Do(req)
 	if err != nil {
 		return r, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return r, fmt.Errorf("GitHub: HTTP %d", resp.StatusCode)
+	resp.Body.Close()
+	loc := resp.Header.Get("Location")
+	k := strings.LastIndex(loc, "/tag/")
+	if resp.StatusCode/100 != 3 || k < 0 {
+		return r, fmt.Errorf("GitHub: no release found (HTTP %d)", resp.StatusCode)
 	}
-	err = json.NewDecoder(resp.Body).Decode(&r)
-	return r, err
+	r.Tag = loc[k+len("/tag/"):]
+	for _, name := range []string{AssetName(), "checksums.txt"} {
+		r.Assets = append(r.Assets, struct {
+			Name string `json:"name"`
+			URL  string `json:"browser_download_url"`
+		}{name, base + "/download/" + r.Tag + "/" + name})
+	}
+	return r, nil
 }
 
 // AssetName is the release file for this platform (GoReleaser "binary" format).
