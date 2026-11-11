@@ -721,7 +721,10 @@ func RefreshClaude() {
 	}
 	if !strings.Contains(string(s.OurClaude["hooks"]), "_tabcolor done") && runtime.GOOS == "windows" {
 		// set up by a version without (all of) the tab colour hooks: add them once
-		if exe := paths.InstalledExe(); exe != "" {
+		// only the installed copy itself: a dev build (go run) or an older copy
+		// must not point Claude at a command the installed exe may not know yet
+		exe := paths.InstalledExe()
+		if self, err := os.Executable(); err == nil && exe != "" && sameFile(self, exe) {
 			_ = Claude(exe)
 		}
 	}
@@ -731,4 +734,10 @@ func RefreshClaude() {
 		return // missing: undone or removed by hand — leave it
 	}
 	_ = config.WriteAtomic(themeFile(), tb)
+}
+
+func sameFile(a, b string) bool {
+	x, err1 := os.Stat(a)
+	y, err2 := os.Stat(b)
+	return err1 == nil && err2 == nil && os.SameFile(x, y)
 }
