@@ -52,6 +52,10 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == launch.PaneCommand {
 		os.Exit(launch.RunPane(os.Args[2:]))
 	}
+	// Claude's SessionStart hook: paint the tab in the project's grey, never fail.
+	if len(os.Args) > 1 && os.Args[1] == launch.TabColorCommand {
+		os.Exit(launch.RunTabColor())
+	}
 	// Claude calls this on every message: no config, no update work, never fail.
 	if len(os.Args) > 1 && os.Args[1] == "statusline" {
 		fmt.Print(statusline.Render(os.Stdin))

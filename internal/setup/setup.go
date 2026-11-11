@@ -21,6 +21,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"unicode/utf16"
 
 	"github.com/jedkx/jedkx-cli/internal/config"
@@ -263,11 +264,64 @@ func Claude(exe string) error {
 		obj.set(k, ours)
 		s.OurClaude[k] = ours
 	}
+	// hooks: our tab colour hook joins the user's hooks (and replaces other tab
+	// colourers, which would paint over the grey tabs)
+	if runtime.GOOS == "windows" {
+		cur, ok := obj.get("hooks")
+		if !ok {
+			cur = json.RawMessage("null")
+		}
+		base := cur
+		if prev, seen := s.PrevClaude["hooks"]; seen && sameJSON(cur, oldOurs["hooks"]) {
+			base = prev // unchanged since our last run: rebuild from the user's own
+		} else {
+			s.PrevClaude["hooks"] = cur
+		}
+		ours := withTabHook(base, exe)
+		obj.set("hooks", ours)
+		s.OurClaude["hooks"] = ours
+	}
 	if err := writeObject(claudeSettings(), obj); err != nil {
 		return err
 	}
 	s.Claude = true
 	return saveState(s)
+}
+
+// withTabHook returns hooks with jedkx-cli's SessionStart tab-colour hook, and
+// without other hooks that colour the tab (an earlier tab colourer, an older
+// jedkx-cli path). Everything else in hooks stays as it is.
+func withTabHook(hooks json.RawMessage, exe string) json.RawMessage {
+	var all map[string]json.RawMessage
+	_ = json.Unmarshal(hooks, &all)
+	if all == nil { // no hooks yet ("null")
+		all = map[string]json.RawMessage{}
+	}
+	var groups []map[string]any
+	_ = json.Unmarshal(all["SessionStart"], &groups)
+	keep := []map[string]any{}
+	for _, g := range groups {
+		list, _ := g["hooks"].([]any)
+		var rest []any
+		for _, h := range list {
+			cmd, _ := h.(map[string]any)["command"].(string)
+			if strings.Contains(cmd, "_tabcolor") || strings.Contains(strings.ToLower(cmd), "tabstate") {
+				continue
+			}
+			rest = append(rest, h)
+		}
+		if len(rest) > 0 {
+			g["hooks"] = rest
+			keep = append(keep, g)
+		}
+	}
+	keep = append(keep, map[string]any{"hooks": []any{map[string]any{
+		"type": "command", "command": quote(exe) + " _tabcolor", "timeout": 5,
+	}}})
+	b, _ := json.Marshal(keep)
+	all["SessionStart"] = b
+	out, _ := json.Marshal(all)
+	return out
 }
 
 func undoClaude(s state) error {
@@ -658,8 +712,15 @@ func dropFragmentProfile(obj *object) {
 // RefreshClaude rewrites the jedkx theme file when this version's theme differs
 // from the one on disk (after an update). Only if the Claude Code part is applied.
 func RefreshClaude() {
-	if !loadState().Claude {
+	s := loadState()
+	if !s.Claude {
 		return
+	}
+	if _, ok := s.OurClaude["hooks"]; !ok && runtime.GOOS == "windows" {
+		// set up by a version without the tab colour hook: add it once
+		if exe := paths.InstalledExe(); exe != "" {
+			_ = Claude(exe)
+		}
 	}
 	tb, _ := json.MarshalIndent(claudeTheme, "", "  ")
 	tb = append(tb, '\n')

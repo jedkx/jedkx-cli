@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -56,6 +57,36 @@ func TestClaudeRoundTrip(t *testing.T) {
 	}
 	if _, err := os.Stat(themeFile()); !os.IsNotExist(err) {
 		t.Fatal("theme file left behind")
+	}
+}
+
+// The tab hook replaces another tab colourer, keeps the user's other hooks, and undo gives the old hooks back.
+func TestTabHook(t *testing.T) {
+	home := fakeHome(t)
+	sp := filepath.Join(home, ".claude", "settings.json")
+	orig := `{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"C:/x/tabstate.exe color"}]}],"Stop":[{"hooks":[{"type":"command","command":"say done"}]}]}}`
+	_ = os.WriteFile(sp, []byte(orig), 0o600)
+	if err := Claude("j.exe"); err != nil {
+		t.Fatal(err)
+	}
+	if runtime.GOOS != "windows" {
+		t.Skip("tab colours are Windows only")
+	}
+	got, _ := os.ReadFile(sp)
+	if strings.Contains(string(got), "tabstate") || !strings.Contains(string(got), "_tabcolor") || !strings.Contains(string(got), "say done") {
+		t.Fatalf("hooks wrong: %s", got)
+	}
+	if err := Claude("j.exe"); err != nil { // again: still one hook
+		t.Fatal(err)
+	}
+	got, _ = os.ReadFile(sp)
+	if strings.Count(string(got), "_tabcolor") != 1 {
+		t.Fatalf("hook doubled: %s", got)
+	}
+	_ = Undo(io.Discard)
+	back, _ := os.ReadFile(sp)
+	if !strings.Contains(string(back), "tabstate") || strings.Contains(string(back), "_tabcolor") {
+		t.Fatalf("undo did not give the old hooks back: %s", back)
 	}
 }
 

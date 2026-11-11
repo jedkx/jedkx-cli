@@ -121,7 +121,8 @@ jedkx-cli uninstall           remove it (--dry-run, --purge, --yes)
 
 `jedkx-cli setup` is optional. It sets:
 
-- **Claude Code:** a `jedkx` theme, the status line, spinner words and tips
+- **Claude Code:** a `jedkx` theme, the status line, spinner words and tips, and (Windows) a grey tab
+  per project so tabs of different projects are told apart
   (in `~/.claude/settings.json`, other keys left as they are)
 - **Windows Terminal:** a `jedkx-cli` profile (PowerShell in the jedkx colours) and a grey tab theme.
   Your profiles and your default profile stay as they are; to open new terminals in the jedkx look,
