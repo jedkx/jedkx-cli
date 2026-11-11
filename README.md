@@ -96,6 +96,9 @@ jedkx-cli .                   only chats from this folder
 jedkx-cli last                continue the latest chat in this folder
 jedkx-cli stats [--days 7]    token use per day
 jedkx-cli sessions [query]    print chats (--json, --tool claude|codex, --all)
+jedkx-cli clean               free disk: caches, snapshots, file history (--older 30: old chats)
+jedkx-cli plugins             Claude Code plugins and MCP servers (enable|disable|update|remove <id>)
+jedkx-cli login [codex]       sign in with another account
 jedkx-cli setup               theme and terminal profile (--only claude|terminal, --undo)
 jedkx-cli config [key [on|off]]   update.check, update.auto, animation, claude, codex
 jedkx-cli update [--check]    install the latest release

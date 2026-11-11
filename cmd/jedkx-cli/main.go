@@ -42,6 +42,9 @@ Usage:
   jedkx-cli install           install / repair this copy (per-user, no admin; --setup [--only claude|terminal], --no-setup)
   jedkx-cli setup             jedkx look for Claude Code + Windows Terminal (--only claude|terminal, --undo)
   jedkx-cli uninstall         remove everything jedkx-cli added (--dry-run, --purge, --yes)
+  jedkx-cli clean             free disk: caches, snapshots, file history (--older 30: old chats)
+  jedkx-cli plugins           Claude Code plugins and MCP servers (enable|disable|update|remove <id>)
+  jedkx-cli login [codex]     sign in with another account (claude by default)
   jedkx-cli statusline        Claude Code status line (settings.json statusLine)
   jedkx-cli nox               say hi to Nox
   jedkx-cli version
@@ -100,6 +103,12 @@ func main() {
 		err = doSetup(args)
 	case "uninstall":
 		err = doUninstall(args)
+	case "clean":
+		err = doClean(cfg, args)
+	case "plugins", "plugin":
+		err = doPlugins(args)
+	case "login":
+		err = doLogin(args)
 	case "nox":
 		err = ui.RunNox()
 	case "version", "--version", "-v":
