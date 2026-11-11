@@ -106,11 +106,16 @@ func AssetName() string {
 // Apply downloads the latest release, verifies its SHA-256 and swaps the binary.
 // The old binary is kept as <exe>.old until the next start, so a failed swap can roll back.
 func Apply(progress func(string)) (string, error) {
+	return ApplyTo(paths.Self(), app.Version, progress)
+}
+
+// ApplyTo updates the binary at exe (whose version is have) to the latest release.
+func ApplyTo(exe, have string, progress func(string)) (string, error) {
 	rel, err := latest(15 * time.Second)
 	if err != nil {
 		return "", err
 	}
-	if !Newer(rel.Tag, app.Version) {
+	if !Newer(rel.Tag, have) {
 		return "", ErrUpToDate
 	}
 	binURL, sumURL := rel.asset(AssetName()), rel.asset("checksums.txt")
@@ -122,7 +127,6 @@ func Apply(progress func(string)) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	exe := paths.Self()
 	// a name of its own: two jedkx-cli updating at once (two lists open) must not
 	// write into the same file — the last rename wins and both files are whole
 	tmp := fmt.Sprintf("%s.new-%d", exe, os.Getpid())

@@ -148,6 +148,20 @@ func wizard() (err error) {
 			}
 		} else {
 			fmt.Println("  jedkx-cli " + ui.Bold(have) + " is already installed " + ui.Dim("(this file: "+app.Version+")") + ".")
+			if tag, err := update.Check(3 * time.Second); err == nil && update.Newer(tag, have) {
+				// a newer release is out than both: offer it
+				fmt.Print("\n  " + ui.Bold(tag+" is out. Update the installed copy?") + " " + ui.Dim("[Y/n]") + " ")
+				if yes(r, true) {
+					fmt.Println("  " + ui.Accent("updating to "+tag+"…"))
+					got, err := update.ApplyTo(paths.InstalledExe(), have, func(s string) { fmt.Println(ui.Dim("  · " + s)) })
+					if err != nil {
+						return fail(r, fmt.Errorf("update failed: %w", err))
+					}
+					fmt.Println("\n  " + ui.OK("✓ updated to "+got+".") + " Open a new terminal and type " + ui.Accent("jedkx-cli"))
+					pause(r)
+					return nil
+				}
+			}
 		}
 		fmt.Println()
 	}

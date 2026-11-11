@@ -118,7 +118,22 @@ func (m Model) infoLines() []string {
 		lines = append(lines, label("account")+acc)
 	}
 	if m.notice != "" {
-		lines = append(lines, label("update")+sAccent.Render(m.notice+" available")+sDim.Render("  → jedkx-cli update"))
+		var u string
+		switch m.updState {
+		case updDownloading:
+			u = sAccent.Render("downloading "+m.notice+"…") + sDim.Render("  keep the list open a moment")
+		case updInstalled:
+			u = sOK.Render("✓ "+m.notice+" installed") + sDim.Render("  → quit (q) and open jedkx-cli again")
+		case updFailed:
+			msg := "could not update"
+			if m.updErr != nil {
+				msg += ": " + m.updErr.Error()
+			}
+			u = sWarn.Render(ansi.Truncate(msg, 50, "…")) + sDim.Render("  → jedkx-cli update")
+		default:
+			u = sAccent.Render(m.notice+" available") + sDim.Render("  → jedkx-cli update")
+		}
+		lines = append(lines, label("update")+u)
 	}
 	for _, t := range m.res.Missing {
 		lines = append(lines, label("note")+sWarn.Render(t+" is not on PATH")+sDim.Render(" — sessions listed, cannot open"))

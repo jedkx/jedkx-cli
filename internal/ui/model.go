@@ -2,6 +2,7 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"github.com/jedkx/jedkx-cli/internal/account"
 	"os"
@@ -126,7 +127,9 @@ type Model struct {
 	libOffset   int
 	deepQ       string          // query the inside-chat search ran for
 	deep        map[string]bool // chats whose text contains deepQ
-	notice      string
+	notice      string          // a newer version: the UPDATE line in the header
+	updState    int             // updAvailable … updFailed
+	updErr      error
 	revealed    int // characters of the info block shown so far (text-reveal)
 }
 
@@ -361,14 +364,24 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return withMood(m, m.load())
 
+	case updateFoundMsg:
+		m.notice, m.updState = msg.tag, updAvailable
+		if m.cfg.AutoUpdate {
+			m.updState = updDownloading
+			m.say("downloading "+msg.tag+"…", false)
+			return m, applyUpdate()
+		}
+		return m, nil
 	case updatedMsg:
 		switch {
 		case msg.applied:
-			m.notice = ""
-			m.say("updated to "+msg.tag+" — restart jedkx-cli to use it", false)
+			m.notice, m.updState = msg.tag, updInstalled
+			m.say("updated to "+msg.tag+" — quit (q) and open jedkx-cli again", false)
 			m.react(moodHappy)
+		case errors.Is(msg.err, update.ErrUpToDate):
+			m.notice = ""
 		default:
-			m.notice = msg.tag // shown in the header with "→ jedkx-cli update"
+			m.updState, m.updErr = updFailed, msg.err
 		}
 		return withMood(m, nil)
 
@@ -484,14 +497,28 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // ---------------------------------------------------------------- self-update
 
-type updatedMsg struct {
-	tag     string
-	applied bool
-}
+// The header's UPDATE line follows the update: "v0.2.0 available" →
+// "downloading v0.2.0…" → "v0.2.0 installed — restart" (or why it failed).
+// It stays until you restart; a status message alone was too easy to miss.
+type (
+	updateFoundMsg struct{ tag string } // a newer release exists
+	updatedMsg     struct {
+		tag     string
+		applied bool
+		err     error
+	}
+)
 
-// autoUpdate checks GitHub on every start (in the background, 3 s budget) and,
-// with update.auto on, installs a newer verified release right away. The new
-// binary is used from the next start; this run keeps going untouched.
+const (
+	updAvailable = iota
+	updDownloading
+	updInstalled
+	updFailed
+)
+
+// autoUpdate checks GitHub on every start (in the background, 3 s budget).
+// With update.auto on, updateFoundMsg then starts the download (applyUpdate).
+// The new binary is used from the next start; this run keeps going untouched.
 func autoUpdate(cfg config.Config) tea.Cmd {
 	if !cfg.UpdateCheck || app.Version == "dev" {
 		return nil
@@ -501,12 +528,14 @@ func autoUpdate(cfg config.Config) tea.Cmd {
 		if err != nil || !update.Newer(tag, app.Version) {
 			return nil
 		}
-		if cfg.AutoUpdate {
-			if got, err := update.Apply(func(string) {}); err == nil {
-				return updatedMsg{tag: got, applied: true}
-			}
-		}
-		return updatedMsg{tag: tag}
+		return updateFoundMsg{tag}
+	}
+}
+
+func applyUpdate() tea.Cmd {
+	return func() tea.Msg {
+		got, err := update.Apply(func(string) {})
+		return updatedMsg{tag: got, applied: err == nil, err: err}
 	}
 }
 

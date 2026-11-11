@@ -186,7 +186,7 @@ var claudeTheme = map[string]any{
 		// diffs keep Claude's own dark colours (they read best)
 		// transcript backgrounds
 		// your messages sit on a faint red-black, like the selected row in the list
-		"userMessageBackground": "#2a1010", "userMessageBackgroundHover": "#381515", // your messages stand out from the answers
+		"userMessageBackground": "#4a1414", "userMessageBackgroundHover": "#5c1a1a", // your messages stand out from the answers
 		"bashMessageBackgroundColor": "#0b0b0b", "memoryBackgroundColor": "#0b0b0b",
 		"selectionBg": "#3a0d0d", "composerSidebarBackground": "#0b0b0b",
 		// labels and meters
