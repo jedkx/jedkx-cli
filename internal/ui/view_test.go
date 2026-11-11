@@ -256,22 +256,29 @@ func TestTabsReachLibrary(t *testing.T) {
 	}
 }
 
-func TestStatusClears(t *testing.T) {
+func TestStatusFades(t *testing.T) {
 	var tm tea.Model = New(config.Default())
 	tm, _ = tm.Update(tea.WindowSizeMsg{Width: 40, Height: 20})
 	tm, _ = tm.Update(loadedMsg(fakeResult()))
 	tm, _ = tm.Update(exportedMsg{path: "x.md"})
 	m := tm.(Model)
-	if m.status == "" {
-		t.Fatal("status expected")
+	if m.status == "" || len(m.events) != 1 {
+		t.Fatal("status and one event expected")
 	}
 	tm, _ = m.Update(statusClearMsg{m.statusSeq - 1})
-	if tm.(Model).status == "" {
-		t.Fatal("an old timer must not clear a newer message")
+	if tm.(Model).statusFaded {
+		t.Fatal("an old timer must not fade a newer message")
 	}
 	tm, _ = tm.Update(statusClearMsg{m.statusSeq})
-	if tm.(Model).status != "" {
-		t.Fatal("status must clear after its time")
+	if mm := tm.(Model); !mm.statusFaded || mm.status == "" {
+		t.Fatal("the message must fade, not vanish")
+	}
+	if !strings.Contains(tm.(Model).View(), "╰▸") {
+		t.Fatal("Nox's line missing")
+	}
+	tm, _ = tm.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("!")})
+	if !strings.Contains(tm.(Model).View(), "notifications") {
+		t.Fatal("! must show the history")
 	}
 }
 

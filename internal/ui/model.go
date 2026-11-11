@@ -104,9 +104,16 @@ type Model struct {
 	mood      []string
 	moodUntil time.Time
 
+	// Nox says what happened, in the line under the header: fresh for a few
+	// seconds, then faded; errors stay red until a key. `!` shows the history.
 	status      string
 	statusBad   bool
-	statusSeq   int // bumps on every new message; its timer clears only that one
+	statusFaded bool
+	statusAt    time.Time
+	statusSeq   int // bumps on every new message; its timer fades only that one
+	events      []event
+	showLog     bool
+	rescanSays  int // 0 quiet, 1 = say only when new chats came, 2 = always (ctrl+r)
 	moodPending bool
 	lastKey     time.Time         // last key: Nox searches / dozes after a quiet spell
 	lastCue     time.Time         // last search / sleep; at most one every cueCooldown
@@ -242,7 +249,22 @@ func withMood(m Model, cmd tea.Cmd) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmd, tea.Tick(moodFor, func(time.Time) tea.Msg { return moodEndMsg{} }))
 }
 
-func (m *Model) say(s string, bad bool) { m.status, m.statusBad = s, bad }
+func (m *Model) say(s string, bad bool) {
+	m.status, m.statusBad, m.statusFaded, m.statusAt = s, bad, false, time.Now()
+	m.events = append(m.events, event{m.statusAt, s, bad})
+	if len(m.events) > maxEvents {
+		m.events = m.events[len(m.events)-maxEvents:]
+	}
+}
+
+// event is one line of the notification history (`!`).
+type event struct {
+	at  time.Time
+	msg string
+	bad bool
+}
+
+const maxEvents = 20
 
 // ---------------------------------------------------------------- update
 
@@ -257,18 +279,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, mm.syncPreview())
 	}
 	// a status message stays a few seconds, then the footer shows the keys again
-	if mm.status != "" && (mm.status != m.status || mm.statusBad != m.statusBad) {
+	// a new message stays bright a few seconds, then fades; errors stay until a key
+	if mm.status != "" && !mm.statusBad && !mm.statusAt.Equal(m.statusAt) {
 		mm.statusSeq++
-		seq, d := mm.statusSeq, statusFor
-		if mm.statusBad {
-			d = 2 * statusFor // errors stay longer
-		}
-		cmds = append(cmds, tea.Tick(d, func(time.Time) tea.Msg { return statusClearMsg{seq} }))
+		seq := mm.statusSeq
+		cmds = append(cmds, tea.Tick(statusFor, func(time.Time) tea.Msg { return statusClearMsg{seq} }))
 	}
 	return mm, tea.Batch(cmds...)
 }
 
-// statusFor is how long a status message shows before the keys come back.
+// statusFor is how long a message stays bright before it fades.
 const statusFor = 4 * time.Second
 
 type statusClearMsg struct{ seq int }
@@ -308,7 +328,7 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// back on the list (from a chat tab, another app): look again, quietly.
 		// No timer — it only happens when you come back.
 		if !m.loading && time.Since(m.lastScan) > focusRescan {
-			m.loading, m.lastScan = true, time.Now()
+			m.loading, m.lastScan, m.rescanSays = true, time.Now(), 1
 			return m, m.load()
 		}
 		return m, nil
@@ -334,7 +354,27 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case loadedMsg:
 		keep := m.selectedKey()
+		before := map[string]bool{}
+		for _, it := range m.res.Items {
+			before[it.Key()] = true
+		}
 		m.res, m.loading = catalog.Result(msg), false
+		if m.rescanSays > 0 {
+			fresh := 0
+			for _, it := range m.res.Items {
+				if !before[it.Key()] {
+					fresh++
+				}
+			}
+			if fresh > 0 || m.rescanSays == 2 {
+				s := fmt.Sprintf("↻ %d chats", len(m.res.Items))
+				if fresh > 0 {
+					s += fmt.Sprintf(", %d new", fresh)
+				}
+				m.say(s, false)
+			}
+			m.rescanSays = 0
+		}
 		m.previewKey = "" // chats may have grown: read the preview again
 		m.refilter()
 		m.selectKey(keep)
@@ -417,7 +457,7 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case statusClearMsg:
 		if msg.seq == m.statusSeq {
-			m.status = ""
+			m.statusFaded = true
 		}
 		return m, nil
 

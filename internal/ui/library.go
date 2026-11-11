@@ -18,7 +18,9 @@ import (
 func (m Model) libShown() []library.Entry { return m.libItems }
 
 func (m Model) updateLib(k tea.KeyMsg) (tea.Model, tea.Cmd) {
-	m.status = ""
+	if m.statusBad {
+		m.status, m.statusBad = "", false
+	}
 	shown := m.libShown()
 	n := len(shown)
 	switch k.String() {
@@ -131,9 +133,6 @@ func (m Model) libView() string {
 	}
 	l1 := keys("enter", "open file", "f", "folder", "c", "copy path")
 	l2 := keys("tab", "next tab", "esc", "back to chats", "ctrl+r", "rescan", "?", "help")
-	if m.status != "" {
-		l2 = sOK.Render(m.status)
-	}
 	b.WriteString("\n" + ansi.Truncate(" "+l1, w-1, "…") + "\n" + ansi.Truncate(" "+l2, w-1, "…"))
 	return b.String()
 }

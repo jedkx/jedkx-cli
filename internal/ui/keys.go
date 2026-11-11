@@ -88,7 +88,18 @@ func (m Model) updateRename(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) updateKeys(k tea.KeyMsg) (tea.Model, tea.Cmd) {
-	m.status = ""
+	if m.statusBad { // an error stays until you press a key
+		m.status, m.statusBad = "", false
+	}
+	if m.showLog {
+		switch k.String() {
+		case "!", "esc":
+			m.showLog = false
+		case "q", "ctrl+c":
+			return m, tea.Quit
+		}
+		return m, nil
+	}
 	if m.help { // the help screen covers the list: no hidden actions behind it
 		switch k.String() {
 		case "?", "esc":
@@ -119,6 +130,8 @@ func (m Model) updateKeys(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 	case "?":
 		m.help = !m.help
+	case "!":
+		m.showLog = true
 	case "/":
 		m.searching = true
 		return m, m.search.Focus()
@@ -127,8 +140,7 @@ func (m Model) updateKeys(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "shift+tab":
 		return m.setTab(m.tabIndex() - 1)
 	case "ctrl+r", "f5":
-		m.loading = true
-		m.say("rescanning…", false)
+		m.loading, m.rescanSays = true, 2
 		return m, m.load()
 	case "enter":
 		if g, ok := m.onGroup(); ok {

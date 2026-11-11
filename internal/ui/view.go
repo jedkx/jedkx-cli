@@ -22,6 +22,9 @@ func (m Model) View() string {
 	if m.help {
 		return m.helpView()
 	}
+	if m.showLog {
+		return m.logView()
+	}
 	var b strings.Builder
 	b.WriteString(m.header())
 	if m.lib {
@@ -57,7 +60,7 @@ func (m Model) face() []string {
 func (m Model) header() string {
 	info := m.infoLines()
 	if !m.showNox() {
-		return ansi.Truncate(" "+sBold.Render(app.Name)+" "+sDim.Render(app.Version)+"  "+sDim.Render(info[2]), m.w-1, "…") + "\n\n"
+		return ansi.Truncate(" "+sBold.Render(app.Name)+" "+sDim.Render(app.Version)+"  "+sDim.Render(info[2]), m.w-1, "…") + "\n" + m.speech(1) + "\n"
 	}
 	face := m.face()
 	var b strings.Builder
@@ -72,7 +75,46 @@ func (m Model) header() string {
 		}
 		b.WriteString(ansi.Truncate(" "+left+right, m.w-1, "…") + "\n")
 	}
-	b.WriteString("\n")
+	b.WriteString(m.speech(3) + "\n")
+	return b.String()
+}
+
+// speech is the line under Nox: what just happened, like Nox saying it.
+// Bright and green / red when new, faded after a few seconds, empty before
+// anything happened — the line is always there, so nothing jumps.
+func (m Model) speech(indent int) string {
+	if m.status == "" {
+		return ""
+	}
+	st := sOK
+	switch {
+	case m.statusBad:
+		st = sAccent
+	case m.statusFaded:
+		st = sDim
+	}
+	tail := sDim.Render("  " + m.statusAt.Format("15:04"))
+	if m.statusBad {
+		tail += sDim.Render("  · any key")
+	}
+	return ansi.Truncate(strings.Repeat(" ", indent)+sNox.Render("╰▸ ")+st.Render(m.status)+tail, m.w-1, "…")
+}
+
+// logView: the last notifications, newest first (`!`).
+func (m Model) logView() string {
+	var b strings.Builder
+	b.WriteString("\n " + sBold.Render("notifications") + sDim.Render("  last "+fmt.Sprint(maxEvents)+" · ! or esc to go back") + "\n\n")
+	if len(m.events) == 0 {
+		b.WriteString("  " + sDim.Render("nothing yet") + "\n")
+	}
+	for i := len(m.events) - 1; i >= 0; i-- {
+		e := m.events[i]
+		st := sText
+		if e.bad {
+			st = sAccent
+		}
+		b.WriteString(ansi.Truncate("  "+sDim.Render(e.at.Format("15:04:05"))+"  "+st.Render(e.msg), m.w-1, "…") + "\n")
+	}
 	return b.String()
 }
 
@@ -385,12 +427,8 @@ func (m Model) footer() string {
 
 func (m Model) footerLines() (string, string) {
 	switch {
-	case m.deleting, m.status != "":
-		st := sOK
-		if m.statusBad {
-			st = sAccent
-		}
-		return st.Render(m.status), ""
+	case m.deleting: // the y / n question sits where your eyes are
+		return sAccent.Render(m.status), keys("y", "delete", "n", "keep")
 	case m.renaming:
 		return keys("enter", "save", "esc", "cancel"), sDim.Render("empty name = original title")
 	case m.searching:
@@ -494,6 +532,7 @@ func (m Model) helpView() string {
 			{"c", "copy the resume command (paste it in any terminal)"},
 			{"e", "export the whole chat as Markdown (Downloads)"},
 			{"tab", "all · claude · codex · archived │ skills & md"},
+			{"!", "notifications: what happened, with the time"},
 		}},
 		{"select", [][2]string{
 			{"x", "select a chat — on a project: the whole folder"},
