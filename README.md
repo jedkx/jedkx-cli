@@ -116,8 +116,8 @@ jedkx-cli uninstall           remove it (--dry-run, --purge, --yes)
 | `p` `r` `a` | pin, rename, archive (`a` in the archived tab brings it back) |
 | `c` `f` `e` | copy resume command, open folder, export to Markdown |
 | `d` | delete the chat's files (asks first) |
-| `/` | search: words in any order, typos forgiven, `"exact words"`, `-leave-out`, filters `tool:codex` `p:project` `b:branch` `#tag` `since:3d` `older:30d` `is:pinned`; best matches first; when nothing matches it looks inside the chats by itself |
-| `m` | more: other tool (Claude ↔ Codex), compact, VS Code, tags, export, free disk, old chats, token use, account |
+| `/` | search: words in any order, typos forgiven, `"exact words"`, `-leave-out`, filters `tool:codex` `p:project` `b:branch` `#tag` `since:3d` `older:30d` `is:pinned`; best matches first; when nothing matches it looks inside the chats by itself (`ctrl+f` does it at once; typos forgiven there too, most hits first) |
+| `m` | more, a panel on the right (the list stays in view): `a` archive, `u` other tool (Claude ↔ Codex), `k` compact, `v` VS Code, `#` tags, `e` export, `c` copy command, `d` free disk, `o` old chats, `t` token use, `l` account, `!` notifications |
 | `tab` | … │ skills & md │ plugins & mcp (enter on/off, u update, d remove) |
 | `tab` | all, claude, codex, archived, skills & md |
 | `!` | notifications: what happened, with the time |

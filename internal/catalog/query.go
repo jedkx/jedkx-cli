@@ -326,3 +326,56 @@ func abs(n int) int {
 	}
 	return n
 }
+
+// TextMatch scores a chat's whole text (the inside-chat search): phrases must be
+// in it, -words must not; each word counts by how often it appears (a typo
+// counts once, when the word itself is nowhere).
+func (q Query) TextMatch(hay string) (int, bool) {
+	for _, n := range q.Not {
+		if strings.Contains(hay, n) {
+			return 0, false
+		}
+	}
+	score := 0
+	for _, p := range q.Phrases {
+		c := strings.Count(hay, p)
+		if c == 0 {
+			return 0, false
+		}
+		score += 3 * min(c, 10)
+	}
+	var tokens map[string]bool // built once, only when a word needs a typo check
+	for _, w := range q.Words {
+		if c := strings.Count(hay, w); c > 0 {
+			score += 2 * min(c, 10)
+			continue
+		}
+		if len([]rune(w)) < 4 {
+			return 0, false
+		}
+		if tokens == nil {
+			tokens = map[string]bool{}
+			for _, t := range strings.FieldsFunc(hay, func(r rune) bool { return !isWordRune(r) }) {
+				if len(t) >= 3 && len(t) <= 40 {
+					tokens[t] = true
+				}
+			}
+		}
+		allowed := 1
+		if len([]rune(w)) >= 8 {
+			allowed = 2
+		}
+		found := false
+		for t := range tokens {
+			if near(t, w, allowed) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return 0, false
+		}
+		score++
+	}
+	return score, true
+}

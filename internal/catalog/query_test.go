@@ -66,3 +66,25 @@ func TestMatchFuzzyFlag(t *testing.T) {
 		t.Fatal("login is an exact match")
 	}
 }
+
+func TestTextMatch(t *testing.T) {
+	hay := Fold("Bu belgeyi e-tebligat servisine gönderiyoruz. Tebligat durumu: bekliyor. Tebligat geldi.")
+	for q, want := range map[string]bool{
+		"tebligat":          true,
+		"teblgat":           true, // typo
+		"gonderiyoruz":      true, // folded
+		`"tebligat durumu"`: true,
+		"tebligat -servis":  false,
+		"xyzzyq":            false,
+		"yok":               false,
+	} {
+		if _, ok := Parse(q).TextMatch(hay); ok != want {
+			t.Errorf("%q: got %v want %v", q, ok, want)
+		}
+	}
+	many, _ := Parse("tebligat").TextMatch(hay)
+	typo, _ := Parse("teblgat").TextMatch(hay)
+	if many <= typo {
+		t.Fatalf("exact hits (%d) should rank above a typo (%d)", many, typo)
+	}
+}

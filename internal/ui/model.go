@@ -156,13 +156,13 @@ type Model struct {
 	menuCursor  int
 	libCursor   int
 	libOffset   int
-	score       map[int]int     // item index → how well it matches the search
-	ranked      bool            // the search has words: best matches first
-	deepAuto    bool            // the inside-chat search started by itself (nothing matched)
-	deepQ       string          // query the inside-chat search ran for
-	deep        map[string]bool // chats whose text contains deepQ
-	notice      string          // a newer version: the UPDATE line in the header
-	updState    int             // updAvailable … updFailed
+	score       map[int]int    // item index → how well it matches the search
+	ranked      bool           // the search has words: best matches first
+	deepAuto    bool           // the inside-chat search started by itself (nothing matched)
+	deepQ       string         // query the inside-chat search ran for
+	deep        map[string]int // chats whose text matches deepQ → how well
+	notice      string         // a newer version: the UPDATE line in the header
+	updState    int            // updAvailable … updFailed
 	updErr      error
 	revealed    int // characters of the info block shown so far (text-reveal)
 }
@@ -706,22 +706,24 @@ func (m Model) deepCmd(q string) tea.Cmd {
 // deepMsg carries the chats whose text contains q (ctrl+f in search).
 type deepMsg struct {
 	q    string
-	keys map[string]bool
+	keys map[string]int
 }
 
 // deepSearch reads every chat file, a few at a time, looking for q.
 // deepSearch finds chats whose messages (not the log's JSON keys) contain every
 // word of q, folded like the list search so "islem" finds "İşlem".
-func deepSearch(items []catalog.Item, q string) map[string]bool {
+func deepSearch(items []catalog.Item, q string) map[string]int {
 	query := catalog.Parse(q)
-	words, not := query.Terms(), query.Not
-	found := map[string]bool{}
+	found := map[string]int{}
+	if len(query.Terms()) == 0 {
+		return found
+	}
 	var mu sync.Mutex
 	sem := make(chan struct{}, 4)
 	var wg sync.WaitGroup
 	for _, it := range items {
 		tr, ok := catalog.Adapter(it.Tool).(source.Transcriber)
-		if !ok || len(words) == 0 {
+		if !ok {
 			continue
 		}
 		wg.Add(1)
@@ -735,22 +737,13 @@ func deepSearch(items []catalog.Item, q string) map[string]bool {
 			var b strings.Builder
 			for _, t := range turns {
 				b.WriteString(t.Text)
-				b.WriteByte('\n')
+				b.WriteByte(10)
 			}
-			hay := catalog.Fold(b.String())
-			for _, w := range words {
-				if !strings.Contains(hay, w) {
-					return
-				}
+			if sc, ok := query.TextMatch(catalog.Fold(b.String())); ok {
+				mu.Lock()
+				found[it.Key()] = sc
+				mu.Unlock()
 			}
-			for _, w := range not {
-				if strings.Contains(hay, w) {
-					return
-				}
-			}
-			mu.Lock()
-			found[it.Key()] = true
-			mu.Unlock()
 		}(it)
 	}
 	wg.Wait()

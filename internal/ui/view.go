@@ -27,7 +27,7 @@ func (m Model) View() string {
 	}
 	var b strings.Builder
 	b.WriteString(m.header())
-	if m.menu {
+	if m.menu && m.menuWidth() == 0 { // narrow: the menu takes the screen
 		b.WriteString(m.menuView())
 		return b.String()
 	}
@@ -43,6 +43,9 @@ func (m Model) View() string {
 	b.WriteString(m.list())
 	b.WriteString(m.detail())
 	b.WriteString(m.footer())
+	if m.menu {
+		return m.withMenu(b.String())
+	}
 	return b.String()
 }
 
@@ -484,12 +487,8 @@ func (m Model) hints() []string {
 		return []string{"n", "new chat", "ctrl+r", "look again", "q", "quit"}
 	}
 	// most used first, short words: two lines hold the archive / pin / rename keys too
-	archive := "archive"
-	if m.archived {
-		archive = "restore"
-	}
 	h := []string{"enter", "open", "t", "new tab", "n", "new chat", "/", "search",
-		"m", "more", "a", archive, "p", "pin", "r", "rename", "x", "select", "space", "preview", "ctrl+r", "refresh",
+		"m", "more", "p", "pin", "r", "rename", "x", "select", "space", "preview", "ctrl+r", "refresh",
 		"d", "delete", "s", "sort", "f", "folder", "o", "full screen"}
 	if m.flat {
 		h = append(h, "v", "by project")
@@ -543,7 +542,7 @@ func (m Model) helpView() string {
 			{"space", "preview: the last messages of the chat"},
 			{"c", "copy the resume command (paste it in any terminal)"},
 			{"e", "export the whole chat as Markdown (Downloads)"},
-			{"m", "more: other tool, compact, VS Code, tags, disk, usage, account…"},
+			{"m", "more (a panel on the right): archive, other tool, compact, VS Code, tags, disk, usage, account — m then the key"},
 			{"tab", "all · claude · codex · archived │ skills & md │ plugins & mcp"},
 			{"!", "notifications: what happened, with the time"},
 			{"u", "continue in the other tool (Claude ↔ Codex), in a new tab"},

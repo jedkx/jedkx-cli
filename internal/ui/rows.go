@@ -39,8 +39,10 @@ func (m *Model) refilter() {
 			continue
 		}
 		sc, ok, fz := q.Match(it)
-		if !ok && raw != "" && raw == m.deepQ && m.deep[it.Key()] {
-			sc, ok = 1, true // found inside the chat's messages
+		if raw != "" && raw == m.deepQ { // inside-chat hits add to the score
+			if d, hit := m.deep[it.Key()]; hit {
+				sc, ok, fz = sc+d, true, fz && !ok
+			}
 		}
 		if !ok {
 			continue
