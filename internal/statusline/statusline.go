@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/jedkx/jedkx-cli/internal/account"
 	"io"
 	"os"
 	"os/exec"
@@ -107,6 +108,9 @@ func Render(r io.Reader) string {
 	}
 	if n := firstNonEmpty(d.Model.Name, d.Model.ID); n != "" {
 		parts = append(parts, c(accent+";1", strings.ToLower(strings.TrimPrefix(n, "Claude "))))
+	}
+	if e := account.Claude(); e != "" { // which account this chat runs on, quietly
+		parts = append(parts, c(dim, e))
 	}
 	return strings.Join(parts, "   ")
 }

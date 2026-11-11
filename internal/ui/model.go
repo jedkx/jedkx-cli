@@ -3,6 +3,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/jedkx/jedkx-cli/internal/account"
 	"os"
 	"strings"
 	"sync"
@@ -75,8 +76,9 @@ var sortModes = []string{"recent", "name", "project", "size"}
 
 // Model is the Bubble Tea model.
 type Model struct {
-	cfg   config.Config
-	store *meta.Store
+	cfg      config.Config
+	store    *meta.Store
+	accounts map[string]string // tool → signed-in e-mail, read once on start
 
 	w, h    int
 	res     catalog.Result
@@ -146,7 +148,8 @@ func New(cfg config.Config) Model {
 		cfg.Animation = false
 	}
 	now := time.Now()
-	m := Model{cfg: cfg, store: meta.Load(meta.File()), search: si, rename: ri, loading: true, notice: update.Notice(), lastKey: now, lastCue: now}
+	m := Model{cfg: cfg, store: meta.Load(meta.File()), search: si, rename: ri, loading: true, notice: update.Notice(), lastKey: now, lastCue: now,
+		accounts: map[string]string{"claude": account.Claude(), "codex": account.Codex()}}
 	if !cfg.Animation {
 		m.revealed = revealDone
 	}

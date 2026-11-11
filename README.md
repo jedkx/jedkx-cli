@@ -24,6 +24,7 @@ in the right folder. The only thing it stores is your own names, pins and archiv
 - A **skills & md** tab with your skills, agents, commands and `CLAUDE.md` / `AGENTS.md` files
 - `jedkx-cli stats` for token use per day (Claude Code)
 - A Claude Code status line
+- Which account Claude Code and Codex are signed in with, shown quietly in the list header and the status line
 - Optional: my Claude Code theme and a Windows Terminal profile (see [Setup](#setup))
 
 Big log files are never read whole: only the start and end of each file, and unchanged files are
@@ -147,7 +148,7 @@ Your names and pins are only deleted if you say so (or pass `--purge`).
 
 ## Privacy
 
-No telemetry or account. Chats are only read on your machine. The only network call is to GitHub to
+No telemetry or account. Chats are only read on your machine. The signed-in e-mail is read from `~/.claude.json` and `~/.codex/auth.json` only to show it; tokens are never kept. The only network call is to GitHub to
 check for a new release (turn off with `jedkx-cli config update.check off`, or keep the check and stop
 auto-download with `update.auto off`).
 

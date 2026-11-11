@@ -114,6 +114,9 @@ func (m Model) infoLines() []string {
 	if !m.loading {
 		lines = append(lines, label("scan")+sDim.Render(m.res.Took.Round(time.Millisecond).String()))
 	}
+	if acc := m.accountLine(); acc != "" {
+		lines = append(lines, label("account")+acc)
+	}
 	if m.notice != "" {
 		lines = append(lines, label("update")+sAccent.Render(m.notice+" available")+sDim.Render("  → jedkx-cli update"))
 	}
@@ -121,6 +124,17 @@ func (m Model) infoLines() []string {
 		lines = append(lines, label("note")+sWarn.Render(t+" is not on PATH")+sDim.Render(" — sessions listed, cannot open"))
 	}
 	return lines
+}
+
+// accountLine: which account each tool is signed in with, dim ("claude a@b · codex c@d").
+func (m Model) accountLine() string {
+	var parts []string
+	for _, t := range m.res.Tools {
+		if e := m.accounts[t]; e != "" {
+			parts = append(parts, sDim.Render(t+" "+e))
+		}
+	}
+	return strings.Join(parts, sDim.Render("  ·  "))
 }
 
 func (m Model) searchBar() string {
