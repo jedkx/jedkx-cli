@@ -186,7 +186,7 @@ var claudeTheme = map[string]any{
 		// diffs keep Claude's own dark colours (they read best)
 		// transcript backgrounds
 		// your messages sit on a faint red-black, like the selected row in the list
-		"userMessageBackground": "#170909", "userMessageBackgroundHover": "#220c0c",
+		"userMessageBackground": "#2a1010", "userMessageBackgroundHover": "#381515", // your messages stand out from the answers
 		"bashMessageBackgroundColor": "#0b0b0b", "memoryBackgroundColor": "#0b0b0b",
 		"selectionBg": "#3a0d0d", "composerSidebarBackground": "#0b0b0b",
 		// labels and meters
@@ -653,4 +653,18 @@ func dropFragmentProfile(obj *object) {
 	}
 	b, _ := json.Marshal(keep)
 	_ = obj.setPath("profiles.list", b)
+}
+
+// RefreshClaude rewrites the jedkx theme file when this version's theme differs
+// from the one on disk (after an update). Only if the Claude Code part is applied.
+func RefreshClaude() {
+	if !loadState().Claude {
+		return
+	}
+	tb, _ := json.MarshalIndent(claudeTheme, "", "  ")
+	tb = append(tb, '\n')
+	if old, err := os.ReadFile(themeFile()); err != nil || string(old) == string(tb) {
+		return // missing: undone or removed by hand — leave it
+	}
+	_ = config.WriteAtomic(themeFile(), tb)
 }

@@ -59,6 +59,7 @@ func main() {
 	}
 	update.Cleanup()
 	setup.RefreshTerminal() // a new version may bring a changed terminal profile
+	setup.RefreshClaude()   // … or a changed Claude Code theme
 	install.SyncVersion()
 	cfg := config.Load()
 
