@@ -5,6 +5,7 @@ package ui
 import (
 	"errors"
 	"fmt"
+	"github.com/jedkx/jedkx-cli/internal/paths"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -67,11 +68,18 @@ func (m Model) updateSearch(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m Model) updateRename(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch k.String() {
 	case "esc":
-		m.renaming = false
-		m.say("rename cancelled", false)
+		m.renaming, m.tagging = false, false
+		m.say("cancelled", false)
 		return m, nil
 	case "enter":
 		m.renaming = false
+		if m.tagging { // "#": words become tags, found by search
+			m.tagging = false
+			tags := strings.Fields(m.rename.Value())
+			m.edit(func(e *meta.Entry) { e.Tags = tags })
+			m.say(fmt.Sprintf("%d tags saved", len(tags)), false)
+			return m, nil
+		}
 		name := strings.TrimSpace(m.rename.Value())
 		m.edit(func(e *meta.Entry) { e.Name = name })
 		if name == "" {
@@ -275,6 +283,33 @@ func (m Model) updateKeys(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.say("restored", false)
 			}
 		}
+	case "#": // tags / a short note, found by search
+		if it, ok := m.selected(); ok {
+			m.renaming, m.tagging = true, true
+			m.rename.SetValue(strings.Join(it.Tags, " "))
+			m.rename.CursorEnd()
+			return m, m.rename.Focus()
+		}
+	case "u": // continue in the other tool: Claude ↔ Codex
+		return m.handOff()
+	case "ctrl+k": // compact: open the chat and run /compact
+		if it, ok := m.selected(); ok {
+			a := catalog.Adapter(it.Tool)
+			if a == nil {
+				return m, nil
+			}
+			cmd := a.Resume(it.Session)
+			cmd.Args = append(cmd.Args, "/compact")
+			return m.run(cmd, "compact "+it.Label(), newTab, "")
+		}
+	case "ctrl+o": // the project in VS Code
+		if it, ok := m.selected(); ok {
+			if err := launch.Editor(it.CWD); err != nil {
+				m.say(err.Error(), true)
+			} else {
+				m.say("opened in the editor", false)
+			}
+		}
 	case "r":
 		if it, ok := m.selected(); ok {
 			m.renaming = true
@@ -336,6 +371,34 @@ func (m Model) open(at place) (tea.Model, tea.Cmd) {
 		return m, func() tea.Msg { return focusMsg{title, launch.Focus(title)} }
 	}
 	return m.run(a.Resume(it.Session), it.Label(), at, it.Key())
+}
+
+// handOff continues a chat in the other tool: the chat goes to a Markdown file
+// and the other tool starts in the same folder, in a new tab, asked to read it.
+// The chat itself is not converted — the tools' files are their own.
+func (m Model) handOff() (tea.Model, tea.Cmd) {
+	it, ok := m.selected()
+	if !ok {
+		return m, nil
+	}
+	other := "codex"
+	if it.Tool == "codex" {
+		other = "claude"
+	}
+	a := catalog.Adapter(other)
+	if a == nil {
+		m.say(other+" is not set up here", true)
+		return m, nil
+	}
+	file, err := export.SaveTo(it, filepath.Join(paths.CacheDir(), "handoff"))
+	if err != nil {
+		m.say(err.Error(), true)
+		return m, nil
+	}
+	cmd := a.New(it.CWD)
+	cmd.Args = append(cmd.Args, "This continues an earlier "+it.Tool+" conversation, saved here: "+file+
+		" — read it first, then tell me in two lines where we left off and wait for my next message.")
+	return m.run(cmd, other+": "+it.Label(), newTab, "")
 }
 
 // startNew opens a fresh session with the selected session's tool, in its directory.

@@ -96,7 +96,8 @@ type Model struct {
 	searching bool
 	rename    textinput.Model
 	renaming  bool
-	tool      int // index into toolFilters
+	tagging   bool // the rename box edits the chat's tags / note instead
+	tool      int  // index into toolFilters
 	archived  bool
 	help      bool
 

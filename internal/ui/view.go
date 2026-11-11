@@ -197,6 +197,8 @@ func (m Model) accountLine() string {
 func (m Model) searchBar() string {
 	var left string
 	switch {
+	case m.tagging:
+		left = sAccent.Render(" tags ") + m.rename.View()
 	case m.renaming:
 		left = sAccent.Render(" rename ") + m.rename.View()
 	case m.searching || m.search.Value() != "":
@@ -429,6 +431,8 @@ func (m Model) footerLines() (string, string) {
 	switch {
 	case m.deleting: // the y / n question sits where your eyes are
 		return sAccent.Render(m.status), keys("y", "delete", "n", "keep")
+	case m.tagging:
+		return keys("enter", "save", "esc", "cancel"), sDim.Render("words separated by spaces; search finds them")
 	case m.renaming:
 		return keys("enter", "save", "esc", "cancel"), sDim.Render("empty name = original title")
 	case m.searching:
@@ -533,6 +537,10 @@ func (m Model) helpView() string {
 			{"e", "export the whole chat as Markdown (Downloads)"},
 			{"tab", "all · claude · codex · archived │ skills & md"},
 			{"!", "notifications: what happened, with the time"},
+			{"u", "continue in the other tool (Claude ↔ Codex), in a new tab"},
+			{"ctrl+k", "compact: open the chat and run /compact"},
+			{"ctrl+o", "open the project in VS Code"},
+			{"#", "tags / a short note (search finds them)"},
 		}},
 		{"select", [][2]string{
 			{"x", "select a chat — on a project: the whole folder"},

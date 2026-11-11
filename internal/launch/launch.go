@@ -130,6 +130,16 @@ func tmux(cmd *exec.Cmd, sub string, extra ...string) error {
 	return exec.Command("tmux", args...).Run()
 }
 
+// Editor opens dir in VS Code (code on PATH).
+func Editor(dir string) error {
+	code, err := exec.LookPath("code")
+	if err != nil {
+		return errors.New("VS Code (code) is not on PATH")
+	}
+	c := exec.Command(code, dir)
+	return c.Start()
+}
+
 // Focus brings the tab with this title to the front: tmux selects the window,
 // Windows Terminal is asked through UI Automation (WT has no command for it).
 // false when it could not be found (e.g. you renamed the tab).

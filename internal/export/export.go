@@ -43,7 +43,10 @@ func Markdown(it catalog.Item, turns []source.Turn) string {
 }
 
 // Save exports it into the Downloads folder and returns the file path.
-func Save(it catalog.Item) (string, error) {
+func Save(it catalog.Item) (string, error) { return SaveTo(it, paths.Downloads()) }
+
+// SaveTo writes the chat as Markdown into dir and returns the file.
+func SaveTo(it catalog.Item, dir string) (string, error) {
 	a := catalog.Adapter(it.Tool)
 	tr, ok := a.(source.Transcriber)
 	if a == nil || !ok {
@@ -62,7 +65,10 @@ func Save(it catalog.Item) (string, error) {
 	}
 	// the id keeps two chats with the same project, minute and title apart
 	name := fmt.Sprintf("%s-%s-%s-%s.md", slug(it.Project(), 24), it.Updated.Format("20060102-1504"), slug(it.Label(), 40), slug(id, 8))
-	p := filepath.Join(paths.Downloads(), name)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	p := filepath.Join(dir, name)
 	return p, os.WriteFile(p, []byte(Markdown(it, turns)), 0o644)
 }
 
