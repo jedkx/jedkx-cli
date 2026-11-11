@@ -117,7 +117,7 @@ jedkx-cli uninstall           remove it (--dry-run, --purge, --yes)
 | `c` `f` `e` | copy resume command, open folder, export to Markdown |
 | `d` | delete the chat's files (asks first) |
 | `/` | search: words in any order, typos forgiven, `"exact words"`, `-leave-out`, filters `tool:codex` `p:project` `b:branch` `#tag` `since:3d` `older:30d` `is:pinned`; best matches first; when nothing matches it looks inside the chats by itself (`ctrl+f` does it at once; typos forgiven there too, most hits first) |
-| `m` | more, a panel on the right (the list stays in view); each line also works without `m`: `a` archive, `u` continue in Codex / Claude, `ctrl+k` compact, `.` VS Code, `#` tags, `e` / `ctrl+s` export, `c` / `y` copy command, `alt+c` free disk, `alt+o` delete old chats, `alt+l` account, `!` notifications |
+| `m` | more, a panel on the right (the list stays in view) with everything else — pin, rename, archive, tags, delete, full screen, Codex / Claude, compact, export, copy, folder, VS Code, sort, groups, refresh, free disk, old chats, account, notifications; each line shows its key, which works without `m` too |
 | `tab` | … │ skills & md │ plugins & mcp (enter on/off, u update, d remove) |
 | `tab` | all, claude, codex, archived, skills & md |
 | `!` | notifications: what happened, with the time |

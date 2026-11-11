@@ -495,16 +495,9 @@ func (m Model) hints() []string {
 	if len(m.rows) == 0 {
 		return []string{"n", "new chat", "ctrl+r", "look again", "q", "quit"}
 	}
-	// most used first, short words: two lines hold the archive / pin / rename keys too
-	h := []string{"enter", "open", "t", "new tab", "n", "new chat", "/", "search",
-		"m", "more", "p", "pin", "r", "rename", "x", "select", "space", "preview", "ctrl+r", "refresh",
-		"d", "delete", "s", "sort", "f", "folder", "o", "full screen"}
-	if m.flat {
-		h = append(h, "v", "by project")
-	} else {
-		h = append(h, "←", "close group")
-	}
-	return append(h, "tab", "tabs", "q", "quit")
+	// only the everyday keys; the rest are in the m menu (their keys work here too)
+	return []string{"enter", "open", "t", "new tab", "n", "new chat", "/", "search",
+		"m", "more", "x", "select", "space", "preview", "tab", "tabs", "q", "quit"}
 }
 
 // keysWrap lays key hints over up to n lines; the last line ends with "? help".
