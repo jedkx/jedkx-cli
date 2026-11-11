@@ -123,7 +123,9 @@ func Apply(progress func(string)) (string, error) {
 		return "", err
 	}
 	exe := paths.Self()
-	tmp := exe + ".new"
+	// a name of its own: two jedkx-cli updating at once (two lists open) must not
+	// write into the same file — the last rename wins and both files are whole
+	tmp := fmt.Sprintf("%s.new-%d", exe, os.Getpid())
 	progress("downloading " + rel.Tag)
 	got, err := download(binURL, tmp)
 	if err != nil {
@@ -152,7 +154,7 @@ func Apply(progress func(string)) (string, error) {
 // ErrUpToDate means there is nothing to install.
 var ErrUpToDate = errors.New("already up to date")
 
-// Cleanup removes leftovers of earlier updates (<exe>.old*, <exe>.new). Files still
+// Cleanup removes leftovers of earlier updates (<exe>.old*, <exe>.new*). Files still
 // in use by an older jedkx-cli that is running are skipped and go next time.
 func Cleanup() {
 	exe := paths.Self()
@@ -160,7 +162,8 @@ func Cleanup() {
 		return
 	}
 	olds, _ := filepath.Glob(exe + ".old*")
-	for _, f := range append(olds, exe+".new") {
+	news, _ := filepath.Glob(exe + ".new*")
+	for _, f := range append(olds, news...) {
 		os.Remove(f)
 	}
 }
