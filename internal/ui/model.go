@@ -420,6 +420,14 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.tokens = msg
 		return m, nil
 
+	case paneMsg:
+		if msg.err != nil {
+			m.say(msg.err.Error(), true)
+			return m, nil
+		}
+		m.say("opened beside the list", false)
+		m.react(moodHappy)
+		return m, nil
 	case focusMsg:
 		if msg.ok {
 			m.say("switched to the tab \""+msg.title+"\"", false)

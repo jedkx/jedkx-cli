@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -87,6 +88,9 @@ func RunPane(args []string) int {
 	}
 	unmark := mark(key, title, where)
 	defer unmark()
+	if owner > 0 { // the list's pane is this one now
+		defer ownPane(owner)()
+	}
 	done := make(chan error, 1)
 	go func() { done <- cmd.Wait() }()
 	var tick <-chan time.Time // nil for a tab: never fires
@@ -107,7 +111,7 @@ func RunPane(args []string) int {
 			}
 			return 0
 		case <-tick:
-			if !alive(owner) {
+			if !alive(owner) || replaced() {
 				stopTree(cmd.Process)
 				<-done
 				return 0
@@ -134,4 +138,58 @@ func isClaude(bin string) bool {
 		b = b[i+1:]
 	}
 	return b == "claude" || b == "claude.exe" || b == "claude.cmd"
+}
+
+// One pane beside the list: the list's pane file holds the wrapper pid of the
+// pane it has open. Opening another asks that wrapper to stop (a stop file it
+// sees on its owner check) and waits for it, so the new pane takes its place.
+
+func paneFile(owner int) string { return filepath.Join(openDir(), "pane-"+strconv.Itoa(owner)) }
+
+func stopFile(pid int) string { return filepath.Join(openDir(), "stop-"+strconv.Itoa(pid)) }
+
+// ownPane records this wrapper as the owner's pane; the returned func clears it
+// unless a newer pane took over.
+func ownPane(owner int) func() {
+	f, me := paneFile(owner), strconv.Itoa(os.Getpid())
+	if os.MkdirAll(openDir(), 0o755) != nil || os.WriteFile(f, []byte(me), 0o600) != nil {
+		return func() {}
+	}
+	return func() {
+		if b, err := os.ReadFile(f); err == nil && string(b) == me {
+			_ = os.Remove(f)
+		}
+	}
+}
+
+// replaced: the list opened another pane and asked this one to close.
+func replaced() bool {
+	f := stopFile(os.Getpid())
+	if _, err := os.Stat(f); err != nil {
+		return false
+	}
+	_ = os.Remove(f)
+	return true
+}
+
+// closePane closes the pane the owner has open, if any, and waits until it is
+// gone (at most a few seconds: the wrapper checks once a second).
+func closePane(owner int) {
+	b, err := os.ReadFile(paneFile(owner))
+	if err != nil {
+		return
+	}
+	pid, _ := strconv.Atoi(strings.TrimSpace(string(b)))
+	if pid <= 0 || pid == os.Getpid() || !alive(pid) {
+		_ = os.Remove(paneFile(owner))
+		return
+	}
+	if os.WriteFile(stopFile(pid), nil, 0o600) != nil {
+		return
+	}
+	for end := time.Now().Add(3 * time.Second); alive(pid) && time.Now().Before(end); {
+		time.Sleep(100 * time.Millisecond)
+	}
+	_ = os.Remove(stopFile(pid))
+	time.Sleep(150 * time.Millisecond) // the terminal closes the pane and gives the space back
 }

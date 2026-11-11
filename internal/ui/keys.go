@@ -436,6 +436,9 @@ func (m Model) startNew() (tea.Model, tea.Cmd) {
 	return m.run(a.New(dir), "new "+tool, newTab, "") // a fresh chat gets its own tab
 }
 
+// paneMsg: a chat was (or could not be) opened beside the list.
+type paneMsg struct{ err error }
+
 // focusMsg: the tab of an already open chat was (or could not be) brought to the front.
 type focusMsg struct {
 	title string
@@ -448,11 +451,12 @@ func (m Model) run(cmd *exec.Cmd, title string, at place, key string) (tea.Model
 		m.react(moodSurprised)
 		return m, nil
 	}
+	if at == splitPane { // may first wait for the old pane to close: not on the UI
+		t := ansi.Truncate(title, 30, "…")
+		return m, func() tea.Msg { return paneMsg{launch.SplitPane(cmd, t, key)} }
+	}
 	if at != here {
 		open, done := launch.NewTab, "opened in a new tab"
-		if at == splitPane {
-			open, done = launch.SplitPane, "opened beside the list"
-		}
 		if err := open(cmd, ansi.Truncate(title, 30, "…"), key); err != nil {
 			m.say(err.Error(), true)
 			return m, nil

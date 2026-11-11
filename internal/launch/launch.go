@@ -69,6 +69,8 @@ func SplitPane(cmd *exec.Cmd, title, key string) error {
 		return err
 	}
 	cmd = wrap(cmd, paths.Self(), os.Getpid(), key, "pane", title) // closes with the list
+	// one chat beside the list: the new one takes the old one's place
+	closePane(os.Getpid())
 	switch Host() {
 	case HostTmux:
 		return tmux(cmd, "split-window", "-h", "-l", fmt.Sprintf("%d%%", besideShare))
