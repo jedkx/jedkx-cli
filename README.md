@@ -115,7 +115,7 @@ jedkx-cli uninstall           remove it (--dry-run, --purge, --yes)
 | `d` | delete the chat's files (asks first) |
 | `tab` | all, claude, codex, archived, skills & md |
 | `!` | notifications: what happened, with the time |
-| `ctrl+r` `?` `q` | refresh (also when you come back to the list), help, quit |
+| `ctrl+r` `?` `q` | refresh chats + check for an update (chats also when you come back), help, quit |
 
 ## Setup
 

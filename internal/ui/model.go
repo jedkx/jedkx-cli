@@ -404,7 +404,17 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return withMood(m, m.load())
 
+	case updateCheckedMsg:
+		if msg.err != nil {
+			m.say("could not check for updates: "+msg.err.Error(), true)
+		} else {
+			m.say("✓ up to date ("+app.Version+")", false)
+		}
+		return m, nil
 	case updateFoundMsg:
+		if m.updState == updDownloading || (m.updState == updInstalled && m.notice == msg.tag) {
+			return m, nil // already on it
+		}
 		m.notice, m.updState = msg.tag, updAvailable
 		if m.cfg.AutoUpdate {
 			m.updState = updDownloading
@@ -571,6 +581,27 @@ func autoUpdate(cfg config.Config) tea.Cmd {
 		return updateFoundMsg{tag}
 	}
 }
+
+// checkUpdate is ctrl+r's look at GitHub: like autoUpdate, but it always says
+// what it found ("up to date" or why it could not check).
+func checkUpdate(cfg config.Config) tea.Cmd {
+	if app.Version == "dev" {
+		return nil
+	}
+	return func() tea.Msg {
+		tag, err := update.Check(5 * time.Second)
+		switch {
+		case err != nil:
+			return updateCheckedMsg{err: err}
+		case update.Newer(tag, app.Version):
+			return updateFoundMsg{tag}
+		}
+		return updateCheckedMsg{}
+	}
+}
+
+// updateCheckedMsg: ctrl+r found no newer version (or could not ask).
+type updateCheckedMsg struct{ err error }
 
 func applyUpdate() tea.Cmd {
 	return func() tea.Msg {

@@ -139,9 +139,12 @@ func (m Model) updateKeys(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.setTab(m.tabIndex() + 1)
 	case "shift+tab":
 		return m.setTab(m.tabIndex() - 1)
-	case "ctrl+r", "f5":
+	case "ctrl+r", "f5": // chats again, and a look for a newer jedkx-cli
 		m.loading, m.rescanSays = true, 2
-		return m, m.load()
+		if m.updState == updInstalled || m.updState == updDownloading {
+			return m, m.load()
+		}
+		return m, tea.Batch(m.load(), checkUpdate(m.cfg))
 	case "enter":
 		if g, ok := m.onGroup(); ok {
 			m.fold(g, !m.folded[g])

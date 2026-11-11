@@ -562,7 +562,7 @@ func (m Model) helpView() string {
 			{"d", "delete for good (asks y/n)"},
 		}},
 		{"other", [][2]string{
-			{"ctrl+r", "refresh (also automatic when you come back to the list)"},
+			{"ctrl+r", "refresh chats (also when you come back) and check for an update"},
 			{"q esc", "quit"},
 		}},
 	}
