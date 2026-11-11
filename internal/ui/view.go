@@ -496,7 +496,7 @@ func (m Model) hints() []string {
 		return []string{"n", "new chat", "ctrl+r", "look again", "q", "quit"}
 	}
 	// only the everyday keys; the rest are in the m menu (their keys work here too)
-	return []string{"enter", "open", "t", "new tab", "n", "new chat", "/", "search",
+	return []string{"enter", "open", "t", "new tab", "/", "search",
 		"m", "more", "x", "select", "space", "preview", "tab", "tabs", "q", "quit"}
 }
 

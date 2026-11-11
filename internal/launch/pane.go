@@ -79,7 +79,8 @@ func RunPane(args []string) int {
 		if k == "" {
 			k = noKey
 		}
-		cmd.Env = append(os.Environ(), "CLAUDE_CODE_DISABLE_TERMINAL_TITLE=1", TabKeyEnv+"="+k)
+		cmd.Env = append(os.Environ(), "CLAUDE_CODE_DISABLE_TERMINAL_TITLE=1", TabKeyEnv+"="+k,
+			tabPIDEnv+"="+strconv.Itoa(os.Getpid()), tabWhereEnv+"="+where, tabTitleEnv+"="+title)
 	}
 	if err := cmd.Start(); err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
@@ -119,6 +120,14 @@ func RunPane(args []string) int {
 // TabKeyEnv tells the tab hook it runs in a tab or pane jedkx-cli opened, and
 // which chat key the tab's marker has ("-" for a new chat).
 const TabKeyEnv = "JEDKX_TAB_KEY"
+
+// the wrapper's pid, "tab" or "pane", and the title it opened with: the hook
+// marks the chat that really runs there (a new chat gets its id only then)
+const (
+	tabPIDEnv   = "JEDKX_TAB_PID"
+	tabWhereEnv = "JEDKX_TAB_WHERE"
+	tabTitleEnv = "JEDKX_TAB_TITLE"
+)
 
 func isClaude(bin string) bool {
 	b := strings.ToLower(filepath.Base(bin))

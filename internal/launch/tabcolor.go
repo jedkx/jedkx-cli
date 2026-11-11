@@ -3,14 +3,16 @@ package launch
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jedkx/jedkx-cli/internal/meta"
-	"github.com/jedkx/jedkx-cli/internal/source/claude"
 	"hash/fnv"
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jedkx/jedkx-cli/internal/meta"
+	"github.com/jedkx/jedkx-cli/internal/source/claude"
 )
 
 // Tab colour per project: Claude Code runs `jedkx-cli _tabcolor` when a chat
@@ -74,8 +76,7 @@ func RunTabColor(args []string) int {
 // chat ("" elsewhere: Claude names its own tabs there). The name is the one
 // the list shows: yours (r) first, then Claude's title, then the first prompt.
 func tabTitle() string {
-	key := os.Getenv(TabKeyEnv)
-	if key == "" {
+	if os.Getenv(TabKeyEnv) == "" {
 		return ""
 	}
 	var in struct {
@@ -110,11 +111,16 @@ func tabTitle() string {
 	if r := []rune(name); len(r) > 40 {
 		name = string(r[:39]) + "…"
 	}
+	shown := name
+	if shown == "" {
+		shown = os.Getenv(tabTitleEnv) // not named yet: the tab keeps its first title
+	}
+	if in.SessionID != "" {
+		pid, _ := strconv.Atoi(os.Getenv(tabPIDEnv))
+		claim("claude:"+in.SessionID, pid, shown, os.Getenv(tabWhereEnv))
+	}
 	if name == "" {
 		return ""
-	}
-	if key != noKey {
-		retitle(key, name)
 	}
 	return "\x1b]0;" + name + "\x07"
 }

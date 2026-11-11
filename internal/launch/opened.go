@@ -55,20 +55,28 @@ func IsOpen(key string) (Opened, bool) {
 	return o, true
 }
 
-// retitle changes the title in a running chat's marker (the tab was renamed),
-// so focusing the tab still finds it.
-func retitle(key, title string) {
+// claim marks key as the chat running in the tab of wrapper pid (from the tab
+// hook): a new chat gets its marker once Claude knows its id, a renamed tab keeps
+// a marker with its new title, and a chat that left the tab (/clear, /resume)
+// loses its marker. The wrapper's own marker is left for it to remove.
+func claim(key string, pid int, title, where string) {
+	if key == "" || pid <= 0 || title == "" {
+		return
+	}
 	f := markerFile(key)
-	b, err := os.ReadFile(f)
-	if err != nil {
-		return
+	entries, _ := os.ReadDir(openDir())
+	for _, e := range entries {
+		p := filepath.Join(openDir(), e.Name())
+		if p == f {
+			continue
+		}
+		var o Opened
+		if b, err := os.ReadFile(p); err == nil && json.Unmarshal(b, &o) == nil && o.PID == pid {
+			_ = os.Remove(p) // that chat is no longer in this tab
+		}
 	}
-	var o Opened
-	if json.Unmarshal(b, &o) != nil {
-		return
-	}
-	o.Title = title
-	if b, err = json.Marshal(o); err == nil {
+	b, _ := json.Marshal(Opened{PID: pid, Title: title, Where: where})
+	if os.MkdirAll(openDir(), 0o755) == nil {
 		_ = os.WriteFile(f, b, 0o600)
 	}
 }

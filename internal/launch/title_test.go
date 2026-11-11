@@ -1,7 +1,9 @@
 package launch
 
 import (
+	"os"
 	"os/exec"
+	"strings"
 	"testing"
 )
 
@@ -24,5 +26,19 @@ func TestTabTitleOnlyInOurTabs(t *testing.T) {
 	t.Setenv(TabKeyEnv, "")
 	if tabTitle() != "" {
 		t.Fatal("outside a jedkx-cli tab the title is Claude's")
+	}
+}
+
+func TestClaimMovesTheMarker(t *testing.T) {
+	t.Setenv("LOCALAPPDATA", t.TempDir())
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	claim("claude:old", 4242, "old chat", "tab")
+	claim("claude:new", 4242, "new chat", "tab") // /clear in the same tab
+	if _, err := os.Stat(markerFile("claude:old")); err == nil {
+		t.Fatal("the chat that left the tab keeps a marker")
+	}
+	b, err := os.ReadFile(markerFile("claude:new"))
+	if err != nil || !strings.Contains(string(b), "new chat") {
+		t.Fatalf("new marker: %s %v", b, err)
 	}
 }
