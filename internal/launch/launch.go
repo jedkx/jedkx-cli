@@ -112,7 +112,9 @@ func wt(cmd *exec.Cmd, sub, title string, extra ...string) error {
 		args = append(args, "-d", cmd.Dir)
 	}
 	args = append(args, "--")
-	args = append(args, cmd.Args...)
+	for _, a := range cmd.Args { // ';' would start a new wt command here too
+		args = append(args, strings.ReplaceAll(a, ";", `\;`))
+	}
 	return exec.Command(exe, args...).Start()
 }
 

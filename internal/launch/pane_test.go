@@ -22,6 +22,16 @@ func TestWrapCommand(t *testing.T) {
 	}
 }
 
+// A new chat has no key yet; an empty argument would be dropped by wt.exe.
+func TestWrapNewChatHasNoEmptyArg(t *testing.T) {
+	w := wrap(exec.Command("claude"), "/bin/jedkx-cli", 0, "", "tab", "")
+	for i, a := range w.Args {
+		if a == "" {
+			t.Fatalf("empty argument at %d: %v", i, w.Args)
+		}
+	}
+}
+
 func TestAlive(t *testing.T) {
 	if !alive(os.Getpid()) {
 		t.Fatal("this process must be alive")

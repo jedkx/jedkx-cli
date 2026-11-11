@@ -20,6 +20,9 @@ import (
 // PaneCommand is the internal subcommand name used by the wrapper.
 const PaneCommand = "_pane"
 
+// noKey stands for "no session yet" (a new chat) in the wrapper's arguments.
+const noKey = "-"
+
 // ownerPoll is how often a pane's wrapper checks that the list is still running.
 const ownerPoll = time.Second
 
@@ -27,6 +30,12 @@ const ownerPoll = time.Second
 func wrap(cmd *exec.Cmd, self string, owner int, key, where, title string) *exec.Cmd {
 	if self == "" {
 		return cmd
+	}
+	if key == "" {
+		key = noKey // wt.exe drops empty arguments: the rest would shift
+	}
+	if title == "" {
+		title = noKey
 	}
 	args := append([]string{self, PaneCommand, strconv.Itoa(owner), key, where, title, "--"}, cmd.Args...)
 	c := exec.Command(args[0], args[1:]...)
@@ -46,6 +55,9 @@ func RunPane(args []string) int {
 		return 2
 	}
 	key, where, title := args[1], args[2], args[3]
+	if key == noKey {
+		key = ""
+	}
 	// ctrl+c belongs to the tool (Claude clears input / exits on its own). The wrapper
 	// catches it so it does not die first and take the pane with it; Notify, not
 	// Ignore, so the child still gets the default behaviour.
