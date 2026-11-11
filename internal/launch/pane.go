@@ -5,7 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -70,6 +72,15 @@ func RunPane(args []string) int {
 	}()
 	cmd := exec.Command(args[5], args[6:]...)
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+	if isClaude(args[5]) {
+		// the tab shows the chat's name: Claude's own titles are off, the tab hook
+		// (_tabcolor) writes the name on every message, so a renamed chat shows too
+		k := key
+		if k == "" {
+			k = noKey
+		}
+		cmd.Env = append(os.Environ(), "CLAUDE_CODE_DISABLE_TERMINAL_TITLE=1", TabKeyEnv+"="+k)
+	}
 	if err := cmd.Start(); err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
 		return 1
@@ -103,4 +114,13 @@ func RunPane(args []string) int {
 			}
 		}
 	}
+}
+
+// TabKeyEnv tells the tab hook it runs in a tab or pane jedkx-cli opened, and
+// which chat key the tab's marker has ("-" for a new chat).
+const TabKeyEnv = "JEDKX_TAB_KEY"
+
+func isClaude(bin string) bool {
+	b := strings.ToLower(filepath.Base(bin))
+	return b == "claude" || b == "claude.exe" || b == "claude.cmd"
 }

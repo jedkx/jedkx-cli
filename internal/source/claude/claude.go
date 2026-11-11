@@ -107,6 +107,16 @@ var (
 )
 
 // parse samples the file: head for cwd/branch/first prompt, tail for the latest title/branch.
+// ParseFile reads one chat file (title, prompt, folder, branch).
+func ParseFile(path string) (source.Session, bool) {
+	st, err := os.Stat(path)
+	if err != nil {
+		return source.Session{}, false
+	}
+	s := parse(path, st)
+	return s, s.ID != ""
+}
+
 func parse(path string, st os.FileInfo) source.Session {
 	s := source.Session{
 		Tool:    "claude",

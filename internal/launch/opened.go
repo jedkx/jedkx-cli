@@ -55,6 +55,24 @@ func IsOpen(key string) (Opened, bool) {
 	return o, true
 }
 
+// retitle changes the title in a running chat's marker (the tab was renamed),
+// so focusing the tab still finds it.
+func retitle(key, title string) {
+	f := markerFile(key)
+	b, err := os.ReadFile(f)
+	if err != nil {
+		return
+	}
+	var o Opened
+	if json.Unmarshal(b, &o) != nil {
+		return
+	}
+	o.Title = title
+	if b, err = json.Marshal(o); err == nil {
+		_ = os.WriteFile(f, b, 0o600)
+	}
+}
+
 // mark writes the marker for this process; the returned func removes it.
 func mark(key, title, where string) func() {
 	if key == "" {

@@ -103,8 +103,13 @@ func wt(cmd *exec.Cmd, sub, title string, extra ...string) error {
 	}
 	// wt.exe splits its command line on ';' — a title like "fix; test" would break it
 	title = strings.ReplaceAll(title, ";", `\;`)
-	// the chat keeps this title: Claude / Codex would rename the tab otherwise
-	args := append([]string{"-w", "0", sub, "--title", title, "--suppressApplicationTitle"}, extra...)
+	// Codex keeps this title (it would rename the tab otherwise); a Claude tab
+	// takes the chat's name from the tab hook as the chat gets named / renamed
+	args := []string{"-w", "0", sub, "--title", title}
+	if !claudeInside(cmd) {
+		args = append(args, "--suppressApplicationTitle")
+	}
+	args = append(args, extra...)
 	if setup.ProfileReady() { // same jedkx look in the new tab or pane
 		args = append(args, "-p", setup.ProfileName)
 	}
@@ -151,4 +156,14 @@ func Focus(title string) bool {
 		return focusWT(title)
 	}
 	return false
+}
+
+// claudeInside: the wrapped command runs Claude Code (… _pane … -- claude …).
+func claudeInside(cmd *exec.Cmd) bool {
+	for i, a := range cmd.Args {
+		if a == "--" && i+1 < len(cmd.Args) {
+			return isClaude(cmd.Args[i+1])
+		}
+	}
+	return len(cmd.Args) > 0 && isClaude(cmd.Args[0])
 }

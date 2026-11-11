@@ -1,11 +1,16 @@
 package launch
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/jedkx/jedkx-cli/internal/meta"
+	"github.com/jedkx/jedkx-cli/internal/source/claude"
 	"hash/fnv"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Tab colour per project: Claude Code runs `jedkx-cli _tabcolor` when a chat
@@ -52,14 +57,64 @@ func tabSequence(dir string) string {
 // RunTabColor is the hook's body; it never fails (a hook must not break a chat).
 // "done" (the Stop hook) marks the tab as finished.
 func RunTabColor(args []string) int {
+	title := tabTitle()
 	if len(args) > 0 && args[0] == "done" {
-		writeToClaudeConsole(doneSequence())
+		writeToClaudeConsole(title + doneSequence())
 		return 0
 	}
 	dir, err := os.Getwd()
 	if err != nil {
 		return 0
 	}
-	writeToClaudeConsole(tabSequence(dir))
+	writeToClaudeConsole(title + tabSequence(dir))
 	return 0
+}
+
+// tabTitle is the OSC 0 sequence that names a tab jedkx-cli opened after its
+// chat ("" elsewhere: Claude names its own tabs there). The name is the one
+// the list shows: yours (r) first, then Claude's title, then the first prompt.
+func tabTitle() string {
+	key := os.Getenv(TabKeyEnv)
+	if key == "" {
+		return ""
+	}
+	var in struct {
+		SessionID      string `json:"session_id"`
+		TranscriptPath string `json:"transcript_path"`
+	}
+	done := make(chan struct{})
+	go func() { // Claude sends the hook's input and closes stdin; never wait long
+		_ = json.NewDecoder(io.LimitReader(os.Stdin, 1<<20)).Decode(&in)
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		return ""
+	}
+	name := ""
+	if in.SessionID != "" {
+		name = meta.Load(meta.File()).Get("claude:" + in.SessionID).Name
+	}
+	if name == "" && in.TranscriptPath != "" {
+		if s, ok := claude.ParseFile(in.TranscriptPath); ok {
+			name = s.Label()
+		}
+	}
+	name = strings.Map(func(r rune) rune { // no control characters in a title
+		if r < 0x20 || r == 0x7f {
+			return -1
+		}
+		return r
+	}, name)
+	if r := []rune(name); len(r) > 40 {
+		name = string(r[:39]) + "…"
+	}
+	if name == "" {
+		return ""
+	}
+	if key != noKey {
+		retitle(key, name)
+	}
+	return "\x1b]0;" + name + "\x07"
 }
