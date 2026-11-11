@@ -311,7 +311,16 @@ func (m Model) open(at place) (tea.Model, tea.Cmd) {
 	if a == nil {
 		return m, nil
 	}
-	return m.run(a.Resume(it.Session), it.Label(), at)
+	if o, open := launch.IsOpen(it.Key()); open { // already running: go there, not a second copy
+		if o.Where == "pane" {
+			m.say("already open beside the list (alt+← → moves between panes)", false)
+			return m, nil
+		}
+		m.say("already open in the tab \""+o.Title+"\"", false)
+		title := o.Title
+		return m, func() tea.Msg { return focusMsg{title, launch.Focus(title)} }
+	}
+	return m.run(a.Resume(it.Session), it.Label(), at, it.Key())
 }
 
 // startNew opens a fresh session with the selected session's tool, in its directory.
@@ -334,10 +343,16 @@ func (m Model) startNew() (tea.Model, tea.Cmd) {
 		dir, _ = os.Getwd()
 	}
 	a := catalog.Adapter(tool)
-	return m.run(a.New(dir), "new "+tool, newTab) // a fresh chat gets its own tab
+	return m.run(a.New(dir), "new "+tool, newTab, "") // a fresh chat gets its own tab
 }
 
-func (m Model) run(cmd *exec.Cmd, title string, at place) (tea.Model, tea.Cmd) {
+// focusMsg: the tab of an already open chat was (or could not be) brought to the front.
+type focusMsg struct {
+	title string
+	ok    bool
+}
+
+func (m Model) run(cmd *exec.Cmd, title string, at place, key string) (tea.Model, tea.Cmd) {
 	if err := launch.Ready(cmd); err != nil {
 		m.say(err.Error(), true)
 		m.react(moodSurprised)
@@ -348,7 +363,7 @@ func (m Model) run(cmd *exec.Cmd, title string, at place) (tea.Model, tea.Cmd) {
 		if at == splitPane {
 			open, done = launch.SplitPane, "opened beside the list"
 		}
-		if err := open(cmd, ansi.Truncate(title, 30, "…")); err != nil {
+		if err := open(cmd, ansi.Truncate(title, 30, "…"), key); err != nil {
 			m.say(err.Error(), true)
 			return m, nil
 		}

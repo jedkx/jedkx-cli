@@ -329,6 +329,13 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.libItems = nil // scanned again on the next visit
 		return m, nil
 
+	case focusMsg:
+		if msg.ok {
+			m.say("switched to the tab \""+msg.title+"\"", false)
+		} else {
+			m.say("already open in the tab \""+msg.title+"\" (could not switch to it)", false)
+		}
+		return m, nil
 	case execDoneMsg:
 		if msg.err != nil {
 			m.say(msg.err.Error(), true)

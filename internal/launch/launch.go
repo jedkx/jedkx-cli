@@ -63,11 +63,12 @@ const besideShare = 75
 
 // SplitPane opens cmd in a pane to the right of the list and returns immediately.
 // The pane is owned by this process: it closes when jedkx-cli exits (see pane.go).
-func SplitPane(cmd *exec.Cmd, title string) error {
+// key is the chat's session key ("" for a new chat), used by IsOpen.
+func SplitPane(cmd *exec.Cmd, title, key string) error {
 	if err := Ready(cmd); err != nil {
 		return err
 	}
-	cmd = owned(cmd, paths.Self()) // closes with the list
+	cmd = wrap(cmd, paths.Self(), os.Getpid(), key, "pane", title) // closes with the list
 	switch Host() {
 	case HostTmux:
 		return tmux(cmd, "split-window", "-h", "-l", fmt.Sprintf("%d%%", besideShare))
@@ -78,7 +79,11 @@ func SplitPane(cmd *exec.Cmd, title string) error {
 }
 
 // NewTab opens cmd in a new tab (tmux window) and returns immediately.
-func NewTab(cmd *exec.Cmd, title string) error {
+func NewTab(cmd *exec.Cmd, title, key string) error {
+	if err := Ready(cmd); err != nil {
+		return err
+	}
+	cmd = wrap(cmd, paths.Self(), 0, key, "tab", title) // not owned: stays when the list closes
 	switch Host() {
 	case HostTmux:
 		return tmux(cmd, "new-window", "-n", title)
@@ -121,4 +126,17 @@ func tmux(cmd *exec.Cmd, sub string, extra ...string) error {
 	}
 	args = append(args, cmd.Args...)
 	return exec.Command("tmux", args...).Run()
+}
+
+// Focus brings the tab with this title to the front: tmux selects the window,
+// Windows Terminal is asked through UI Automation (WT has no command for it).
+// false when it could not be found (e.g. you renamed the tab).
+func Focus(title string) bool {
+	switch Host() {
+	case HostTmux:
+		return exec.Command("tmux", "select-window", "-t", "="+title).Run() == nil
+	case HostWindowsTerminal:
+		return focusWT(title)
+	}
+	return false
 }

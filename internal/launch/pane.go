@@ -9,24 +9,26 @@ import (
 	"time"
 )
 
-// Panes opened beside the list belong to it: they run through `jedkx-cli _pane
-// <owner pid> -- <tool …>`, a small wrapper that runs the tool in the pane and
-// ends it when the list (the owner) is gone. Closing jedkx-cli therefore closes
-// the chats it opened beside it; the tool's own exit (ctrl+c, /exit) closes just
-// that pane. Tabs are independent and are not wrapped.
+// Chats opened beside the list or in a tab run through `jedkx-cli _pane <owner
+// pid> <key> <where> <title> -- <tool …>`, a small wrapper that runs the tool and
+// leaves an "open" marker while it runs (opened.go). Panes belong to the list:
+// the wrapper ends the tool once the list (the owner) is gone, so closing
+// jedkx-cli closes the chats it opened beside it. Tabs are independent: owner 0,
+// nothing is polled. The tool's own exit (ctrl+c, /exit) closes just that pane
+// or tab.
 
 // PaneCommand is the internal subcommand name used by the wrapper.
 const PaneCommand = "_pane"
 
-// ownerPoll is how often the wrapper checks that the list is still running.
+// ownerPoll is how often a pane's wrapper checks that the list is still running.
 const ownerPoll = time.Second
 
-// owned rewrites cmd so it runs under the wrapper, owned by this process.
-func owned(cmd *exec.Cmd, self string) *exec.Cmd {
+// wrap rewrites cmd so it runs under the wrapper. owner 0 = not owned (a tab).
+func wrap(cmd *exec.Cmd, self string, owner int, key, where, title string) *exec.Cmd {
 	if self == "" {
 		return cmd
 	}
-	args := append([]string{self, PaneCommand, strconv.Itoa(os.Getpid()), "--"}, cmd.Args...)
+	args := append([]string{self, PaneCommand, strconv.Itoa(owner), key, where, title, "--"}, cmd.Args...)
 	c := exec.Command(args[0], args[1:]...)
 	c.Dir = cmd.Dir
 	return c
@@ -36,13 +38,14 @@ func owned(cmd *exec.Cmd, self string) *exec.Cmd {
 // owner exits. It returns the exit code for the pane (0 when the owner closed it,
 // so the terminal closes the pane instead of showing an error).
 func RunPane(args []string) int {
-	if len(args) < 3 || args[1] != "--" {
+	if len(args) < 6 || args[4] != "--" {
 		return 2
 	}
 	owner, err := strconv.Atoi(args[0])
 	if err != nil {
 		return 2
 	}
+	key, where, title := args[1], args[2], args[3]
 	// ctrl+c belongs to the tool (Claude clears input / exits on its own). The wrapper
 	// catches it so it does not die first and take the pane with it; Notify, not
 	// Ignore, so the child still gets the default behaviour.
@@ -53,16 +56,22 @@ func RunPane(args []string) int {
 		for range sig {
 		}
 	}()
-	cmd := exec.Command(args[2], args[3:]...)
+	cmd := exec.Command(args[5], args[6:]...)
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	if err := cmd.Start(); err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
 		return 1
 	}
+	unmark := mark(key, title, where)
+	defer unmark()
 	done := make(chan error, 1)
 	go func() { done <- cmd.Wait() }()
-	tick := time.NewTicker(ownerPoll)
-	defer tick.Stop()
+	var tick <-chan time.Time // nil for a tab: never fires
+	if owner > 0 {
+		t := time.NewTicker(ownerPoll)
+		defer t.Stop()
+		tick = t.C
+	}
 	for {
 		select {
 		case err := <-done:
@@ -74,7 +83,7 @@ func RunPane(args []string) int {
 				return 1
 			}
 			return 0
-		case <-tick.C:
+		case <-tick:
 			if !alive(owner) {
 				stopTree(cmd.Process)
 				<-done

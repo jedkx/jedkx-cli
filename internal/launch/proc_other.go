@@ -19,3 +19,5 @@ func stopTree(p *os.Process) {
 	_ = p.Signal(syscall.SIGTERM)
 	time.AfterFunc(2*time.Second, func() { _ = p.Kill() })
 }
+
+func focusWT(string) bool { return false }

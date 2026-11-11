@@ -16,6 +16,7 @@ in the right folder. The only thing it stores is your own names, pins and archiv
 
 - Claude Code and Codex chats in one list, grouped by project, pinned ones on top
 - Open a chat beside the list (`enter`), full screen (`o`) or in a new tab (`t`); `n` starts a new chat in that folder, in a new tab
+- A chat that is already open is not opened twice: `enter` / `t` switches to its tab
 - Search titles, first prompts, folders and branches; `ctrl+f` searches inside the chats too
 - Preview the last few messages with `space`
 - Rename, pin, archive, delete; select several (`x`, `ctrl+a`) and act on all of them
