@@ -79,6 +79,7 @@ type Model struct {
 	cfg      config.Config
 	store    *meta.Store
 	accounts map[string]string // tool → signed-in e-mail, read once on start
+	lastScan time.Time         // the last rescan on focus
 
 	w, h    int
 	res     catalog.Result
@@ -269,6 +270,9 @@ const statusFor = 4 * time.Second
 
 type statusClearMsg struct{ seq int }
 
+// focusRescan: coming back to the list rescans at most this often.
+const focusRescan = 3 * time.Second
+
 // syncPreview starts reading the selected chat's last messages when the
 // selection changed; the file is read off the UI thread (previewMsg).
 func (m *Model) syncPreview() tea.Cmd {
@@ -297,6 +301,14 @@ type previewMsg struct {
 
 func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.FocusMsg:
+		// back on the list (from a chat tab, another app): look again, quietly.
+		// No timer — it only happens when you come back.
+		if !m.loading && time.Since(m.lastScan) > focusRescan {
+			m.loading, m.lastScan = true, time.Now()
+			return m, m.load()
+		}
+		return m, nil
 	case tea.WindowSizeMsg:
 		m.w, m.h = msg.Width, msg.Height
 		m.clamp()

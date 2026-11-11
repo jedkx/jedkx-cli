@@ -424,7 +424,7 @@ func (m Model) hints() []string {
 	} else {
 		h = append(h, "←", "close group")
 	}
-	return append(h, "space", "preview", "t", "new tab", "n", "new chat", "c", "copy command", "e", "export", "tab", "skills & md", "d", "delete", "s", "sort", "f", "folder", "p", "pin", "o", "full screen", "q", "quit")
+	return append(h, "ctrl+r", "refresh", "space", "preview", "t", "new tab", "n", "new chat", "c", "copy command", "e", "export", "tab", "skills & md", "d", "delete", "s", "sort", "f", "folder", "p", "pin", "o", "full screen", "q", "quit")
 }
 
 // keysWrap lays key hints over up to n lines; the last line ends with "? help".
@@ -501,7 +501,7 @@ func (m Model) helpView() string {
 			{"d", "delete for good (asks y/n)"},
 		}},
 		{"other", [][2]string{
-			{"ctrl+r", "rescan"},
+			{"ctrl+r", "refresh (also automatic when you come back to the list)"},
 			{"q esc", "quit"},
 		}},
 	}

@@ -20,7 +20,7 @@ func RunQuery(cfg config.Config, q string) error {
 	if q != "" {
 		m.search.SetValue(q)
 	}
-	_, err := tea.NewProgram(m, tea.WithAltScreen()).Run()
+	_, err := tea.NewProgram(m, tea.WithAltScreen(), tea.WithReportFocus()).Run()
 	return err
 }
 

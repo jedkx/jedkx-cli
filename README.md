@@ -114,7 +114,7 @@ jedkx-cli uninstall           remove it (--dry-run, --purge, --yes)
 | `c` `f` `e` | copy resume command, open folder, export to Markdown |
 | `d` | delete the chat's files (asks first) |
 | `tab` | all, claude, codex, archived, skills & md |
-| `ctrl+r` `?` `q` | rescan, help, quit |
+| `ctrl+r` `?` `q` | refresh (also when you come back to the list), help, quit |
 
 ## Setup
 
