@@ -410,7 +410,7 @@ func (m Model) hints() []string {
 	} else {
 		h = append(h, "←", "close group")
 	}
-	return append(h, "space", "preview", "n", "new chat", "c", "copy command", "e", "export", "tab", "skills & md", "d", "delete", "s", "sort", "f", "folder", "p", "pin", "o", "full screen", "q", "quit")
+	return append(h, "space", "preview", "t", "new tab", "n", "new chat", "c", "copy command", "e", "export", "tab", "skills & md", "d", "delete", "s", "sort", "f", "folder", "p", "pin", "o", "full screen", "q", "quit")
 }
 
 // keysWrap lays key hints over up to n lines; the last line ends with "? help".
@@ -453,7 +453,7 @@ func (m Model) helpView() string {
 			{"enter", "open beside the list (resize: alt+shift+← →)"},
 			{"o", "open here, full screen"},
 			{"t", "open in a new tab"},
-			{"n", "new session in the same folder"},
+			{"n", "new chat in the same folder, in a new tab"},
 			{"space", "preview: the last messages of the chat"},
 			{"c", "copy the resume command (paste it in any terminal)"},
 			{"e", "export the whole chat as Markdown (Downloads)"},

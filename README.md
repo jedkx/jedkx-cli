@@ -15,7 +15,7 @@ in the right folder. The only thing it stores is your own names, pins and archiv
 ## Features
 
 - Claude Code and Codex chats in one list, grouped by project, pinned ones on top
-- Open a chat beside the list (`enter`), full screen (`o`) or in a new tab (`t`)
+- Open a chat beside the list (`enter`), full screen (`o`) or in a new tab (`t`); `n` starts a new chat in that folder, in a new tab
 - Search titles, first prompts, folders and branches; `ctrl+f` searches inside the chats too
 - Preview the last few messages with `space`
 - Rename, pin, archive, delete; select several (`x`, `ctrl+a`) and act on all of them
@@ -103,7 +103,7 @@ jedkx-cli uninstall           remove it (--dry-run, --purge, --yes)
 | Key | Action |
 |---|---|
 | `enter` | open beside the list (Windows Terminal / tmux); on a project: fold / unfold |
-| `o` `t` `n` | full screen, new tab, new chat in the same folder |
+| `o` `t` `n` | full screen, new tab, new chat in the same folder (new tab) |
 | `space` `s` | preview, change sort |
 | `/` `ctrl+f` | search, search inside chats |
 | `←` `→` `z` `v` | fold / unfold, fold all, flat list |

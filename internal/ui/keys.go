@@ -334,7 +334,7 @@ func (m Model) startNew() (tea.Model, tea.Cmd) {
 		dir, _ = os.Getwd()
 	}
 	a := catalog.Adapter(tool)
-	return m.run(a.New(dir), "new "+tool, here)
+	return m.run(a.New(dir), "new "+tool, newTab) // a fresh chat gets its own tab
 }
 
 func (m Model) run(cmd *exec.Cmd, title string, at place) (tea.Model, tea.Cmd) {
