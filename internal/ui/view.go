@@ -27,6 +27,14 @@ func (m Model) View() string {
 	}
 	var b strings.Builder
 	b.WriteString(m.header())
+	if m.menu {
+		b.WriteString(m.menuView())
+		return b.String()
+	}
+	if m.plug {
+		b.WriteString(m.plugView())
+		return b.String()
+	}
 	if m.lib {
 		b.WriteString(m.libView())
 		return b.String()
@@ -481,14 +489,14 @@ func (m Model) hints() []string {
 		archive = "restore"
 	}
 	h := []string{"enter", "open", "t", "new tab", "n", "new chat", "/", "search",
-		"a", archive, "p", "pin", "r", "rename", "x", "select", "space", "preview", "ctrl+r", "refresh",
-		"d", "delete", "e", "export", "c", "copy cmd", "s", "sort", "f", "folder", "o", "full screen"}
+		"m", "more", "a", archive, "p", "pin", "r", "rename", "x", "select", "space", "preview", "ctrl+r", "refresh",
+		"d", "delete", "s", "sort", "f", "folder", "o", "full screen"}
 	if m.flat {
 		h = append(h, "v", "by project")
 	} else {
 		h = append(h, "←", "close group")
 	}
-	return append(h, "tab", "skills & md", "q", "quit")
+	return append(h, "tab", "tabs", "q", "quit")
 }
 
 // keysWrap lays key hints over up to n lines; the last line ends with "? help".
@@ -535,11 +543,10 @@ func (m Model) helpView() string {
 			{"space", "preview: the last messages of the chat"},
 			{"c", "copy the resume command (paste it in any terminal)"},
 			{"e", "export the whole chat as Markdown (Downloads)"},
-			{"tab", "all · claude · codex · archived │ skills & md"},
+			{"m", "more: other tool, compact, VS Code, tags, disk, usage, account…"},
+			{"tab", "all · claude · codex · archived │ skills & md │ plugins & mcp"},
 			{"!", "notifications: what happened, with the time"},
 			{"u", "continue in the other tool (Claude ↔ Codex), in a new tab"},
-			{"ctrl+k", "compact: open the chat and run /compact"},
-			{"ctrl+o", "open the project in VS Code"},
 			{"#", "tags / a short note (search finds them)"},
 		}},
 		{"select", [][2]string{

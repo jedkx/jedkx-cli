@@ -20,6 +20,7 @@ import (
 	"github.com/jedkx/jedkx-cli/internal/config"
 	"github.com/jedkx/jedkx-cli/internal/library"
 	"github.com/jedkx/jedkx-cli/internal/meta"
+	"github.com/jedkx/jedkx-cli/internal/plugins"
 	"github.com/jedkx/jedkx-cli/internal/source"
 	"github.com/jedkx/jedkx-cli/internal/update"
 )
@@ -34,16 +35,19 @@ var toolFilters = []string{"", "claude", "codex"}
 // tabNames are what tab cycles through: chats (all / per tool, the start tab
 // is all), the archived chats, then the library — skills, agents, commands and
 // CLAUDE.md / AGENTS.md files together.
-var tabNames = []string{"all", "claude", "codex", "archived", "skills & md"}
+var tabNames = []string{"all", "claude", "codex", "archived", "skills & md", "plugins & mcp"}
 
 const (
 	archivedTab = 3 // index of "archived" in tabNames
 	libTab      = 4 // the library tab
+	plugTab     = 5 // Claude Code's plugins and MCP servers
 )
 
 // tabIndex is the current tab in tabNames.
 func (m Model) tabIndex() int {
 	switch {
+	case m.plug:
+		return plugTab
 	case m.lib:
 		return libTab
 	case m.archived:
@@ -56,6 +60,15 @@ func (m Model) tabIndex() int {
 func (m Model) setTab(i int) (tea.Model, tea.Cmd) {
 	n := len(tabNames)
 	i = ((i % n) + n) % n
+	if i == plugTab {
+		m.plug, m.lib, m.archived, m.plugAsk = true, false, false, false
+		if !m.plugLoaded {
+			m.plugBusy = "asking Claude Code for its plugins…"
+			return m, loadPlugins()
+		}
+		return m, nil
+	}
+	m.plug = false
 	if i < libTab {
 		m.lib, m.archived, m.tool = false, i == archivedTab, i%archivedTab
 		if m.archived {
@@ -131,6 +144,15 @@ type Model struct {
 	sortBy      int  // index into sortModes
 	lib         bool // L: the library (skills, CLAUDE.md, agents…)
 	libItems    []library.Entry
+	plug        bool // the plugins & mcp tab
+	plugItems   []plugins.Entry
+	plugLoaded  bool
+	plugCursor  int
+	plugOffset  int
+	plugBusy    string // a change Claude Code is still making
+	plugAsk     bool   // "remove …? y/n"
+	menu        bool   // m: the "more" menu
+	menuCursor  int
 	libCursor   int
 	libOffset   int
 	deepQ       string          // query the inside-chat search ran for
@@ -395,6 +417,26 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.say("already open in the tab \""+msg.title+"\" (could not switch to it)", false)
 		}
 		return m, nil
+	case plugListMsg:
+		m.plugBusy = ""
+		if msg.err != nil {
+			m.say(msg.err.Error(), true)
+			return m, nil
+		}
+		m.plugItems, m.plugLoaded = msg.items, true
+		m.plugCursor = min(m.plugCursor, max(0, len(m.plugItems)-1))
+		return m, nil
+	case plugDoneMsg:
+		if msg.err != nil {
+			m.plugBusy = ""
+			m.say(msg.err.Error(), true)
+			m.react(moodSurprised)
+			return m, nil
+		}
+		m.say(msg.done, false)
+		m.react(moodHappy)
+		m.plugBusy = "asking Claude Code…"
+		return m, loadPlugins()
 	case execDoneMsg:
 		if msg.err != nil {
 			m.say(msg.err.Error(), true)
@@ -526,6 +568,10 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var next tea.Model
 		var cmd tea.Cmd
 		switch {
+		case m.menu:
+			next, cmd = m.updateMenu(msg)
+		case m.plug && !m.help:
+			next, cmd = m.updatePlug(msg)
 		case m.lib && !m.help:
 			next, cmd = m.updateLib(msg)
 		case m.deleting:

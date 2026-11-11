@@ -2,22 +2,17 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"sort"
-	"strings"
 	"time"
 
 	"github.com/jedkx/jedkx-cli/internal/catalog"
 	"github.com/jedkx/jedkx-cli/internal/clean"
 	"github.com/jedkx/jedkx-cli/internal/config"
 	"github.com/jedkx/jedkx-cli/internal/meta"
-	"github.com/jedkx/jedkx-cli/internal/paths"
+	"github.com/jedkx/jedkx-cli/internal/plugins"
 	"github.com/jedkx/jedkx-cli/internal/ui"
 )
 
@@ -28,8 +23,12 @@ func doClean(cfg config.Config, args []string) error {
 	fs := flag.NewFlagSet("clean", flag.ExitOnError)
 	older := fs.Int("older", 0, "delete chats older than this many days (not pinned)")
 	yesAll := fs.Bool("yes", false, "do not ask")
+	pause := fs.Bool("pause", false, "wait for enter at the end (run from the list)")
 	_ = fs.Parse(args)
 	r := bufio.NewReader(os.Stdin)
+	if *pause {
+		defer waitEnter(r)
+	}
 	if *older > 0 {
 		return cleanOld(cfg, r, *older, *yesAll)
 	}
@@ -114,6 +113,12 @@ func cleanOld(cfg config.Config, r *bufio.Reader, days int, yesAll bool) error {
 	return nil
 }
 
+// waitEnter keeps the output on screen until enter (the list comes back after).
+func waitEnter(r *bufio.Reader) {
+	fmt.Print("\n  " + ui.Dim("enter: back to the list") + " ")
+	_, _ = r.ReadString('\n')
+}
+
 func human(n int64) string {
 	switch {
 	case n >= 1<<30:
@@ -130,6 +135,7 @@ func human(n int64) string {
 
 // doPlugins lists Claude Code plugins and MCP servers and passes changes to
 // Claude Code's own commands (`claude plugin …`), never editing its files.
+// The list has the same as a tab: plugins & mcp.
 func doPlugins(args []string) error {
 	if len(args) >= 2 {
 		switch args[0] {
@@ -141,64 +147,24 @@ func doPlugins(args []string) error {
 			return passThrough("claude", "mcp", "remove", args[1])
 		}
 	}
-	out, err := exec.Command("claude", "plugin", "list", "--json").Output()
+	list, err := plugins.List()
 	if err != nil {
-		return errors.New("could not ask Claude Code for its plugins (is claude on PATH?)")
+		return err
 	}
-	var list []struct {
-		ID      string `json:"id"`
-		Version string `json:"version"`
-		Scope   string `json:"scope"`
-		Enabled bool   `json:"enabled"`
-	}
-	_ = json.Unmarshal(out, &list)
-	sort.Slice(list, func(i, j int) bool { return list[i].ID < list[j].ID })
-	fmt.Println(ui.Bold(fmt.Sprintf("  plugins · %d", len(list))))
+	fmt.Println(ui.Bold("  plugins & mcp"))
 	for _, p := range list {
 		on := ui.Dim("off")
 		if p.Enabled {
 			on = ui.OK("on ")
 		}
-		fmt.Printf("   %s  %-48s %s\n", on, p.ID, ui.Dim(p.Version+" · "+p.Scope))
-	}
-	if mcp := mcpServers(); len(mcp) > 0 {
-		fmt.Println("\n" + ui.Bold(fmt.Sprintf("  MCP servers · %d", len(mcp))))
-		for _, m := range mcp {
-			fmt.Println("   " + m)
+		extra := p.Version + " · " + p.Scope
+		if p.Kind == "mcp" {
+			extra = p.Detail
 		}
+		fmt.Printf("   %s  %-6s %-48s %s\n", on, p.Kind, p.Name, ui.Dim(extra))
 	}
 	fmt.Println(ui.Dim("\n  jedkx-cli plugins enable|disable|update|remove <id>   ·   jedkx-cli plugins mcp-remove <name>"))
 	return nil
-}
-
-// mcpServers are the user-level MCP servers in ~/.claude.json (read-only).
-func mcpServers() []string {
-	f := filepath.Join(paths.Home(), ".claude.json")
-	if d := os.Getenv("CLAUDE_CONFIG_DIR"); d != "" {
-		f = filepath.Join(d, ".claude.json")
-	}
-	b, err := os.ReadFile(f)
-	if err != nil {
-		return nil
-	}
-	var c struct {
-		MCP map[string]struct {
-			Type    string `json:"type"`
-			Command string `json:"command"`
-			URL     string `json:"url"`
-		} `json:"mcpServers"`
-	}
-	_ = json.Unmarshal(b, &c)
-	var out []string
-	for name, s := range c.MCP {
-		where := s.URL
-		if where == "" {
-			where = s.Command
-		}
-		out = append(out, fmt.Sprintf("%-28s %s", name, ui.Dim(strings.TrimSpace(s.Type+" "+where))))
-	}
-	sort.Strings(out)
-	return out
 }
 
 // ---------------------------------------------------------------- login

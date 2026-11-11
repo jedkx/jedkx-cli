@@ -116,8 +116,8 @@ jedkx-cli uninstall           remove it (--dry-run, --purge, --yes)
 | `p` `r` `a` | pin, rename, archive (`a` in the archived tab brings it back) |
 | `c` `f` `e` | copy resume command, open folder, export to Markdown |
 | `d` | delete the chat's files (asks first) |
-| `u` | continue the chat in the other tool (Claude ↔ Codex), in a new tab |
-| `ctrl+k` `ctrl+o` `#` | compact (opens it and runs /compact), open in VS Code, tags / note |
+| `m` | more: other tool (Claude ↔ Codex), compact, VS Code, tags, export, free disk, old chats, token use, account |
+| `tab` | … │ skills & md │ plugins & mcp (enter on/off, u update, d remove) |
 | `tab` | all, claude, codex, archived, skills & md |
 | `!` | notifications: what happened, with the time |
 | `ctrl+r` `?` `q` | refresh chats + check for an update (chats also when you come back), help, quit |

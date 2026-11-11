@@ -283,6 +283,9 @@ func (m Model) updateKeys(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.say("restored", false)
 			}
 		}
+	case "m": // the "more" menu
+		m.menu, m.menuCursor = true, 0
+		return m, nil
 	case "#": // tags / a short note, found by search
 		if it, ok := m.selected(); ok {
 			m.renaming, m.tagging = true, true

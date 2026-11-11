@@ -12,6 +12,7 @@ import (
 	"github.com/jedkx/jedkx-cli/internal/config"
 	"github.com/jedkx/jedkx-cli/internal/library"
 	"github.com/jedkx/jedkx-cli/internal/meta"
+	"github.com/jedkx/jedkx-cli/internal/plugins"
 	"github.com/jedkx/jedkx-cli/internal/source"
 )
 
@@ -203,6 +204,27 @@ func TestLibraryFits(t *testing.T) {
 				t.Errorf("w=%d library line %d too wide: %q", w, i, ansi.Strip(l))
 			}
 		}
+	}
+}
+
+func TestMenuAndPluginsFit(t *testing.T) {
+	for _, w := range []int{18, 40, 80, 160} {
+		m := New(config.Default())
+		m.w, m.h = w, 30
+		m.menu = true
+		check := func(what string) {
+			for i, l := range strings.Split(m.View(), "\n") {
+				if ansi.StringWidth(l) > w {
+					t.Errorf("w=%d %s line %d too wide: %q", w, what, i, ansi.Strip(l))
+				}
+			}
+		}
+		check("menu")
+		m.menu, m.plug, m.plugLoaded = false, true, true
+		m.plugItems = []plugins.Entry{{Kind: "plugin", Name: strings.Repeat("long-plugin-", 6), Version: "1.0", Scope: "user"}, {Kind: "mcp", Name: "x", Detail: strings.Repeat("npx thing ", 10), Enabled: true}}
+		check("plugins")
+		m.plugAsk = true
+		check("plugins ask")
 	}
 }
 

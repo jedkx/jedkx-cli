@@ -678,7 +678,11 @@ func resumeLast(cfg config.Config) error {
 func doStats(cfg config.Config, args []string) error {
 	fs := flag.NewFlagSet("stats", flag.ExitOnError)
 	days := fs.Int("days", 7, "how many days back")
+	pause := fs.Bool("pause", false, "wait for enter at the end (run from the list)")
 	_ = fs.Parse(args)
+	if *pause {
+		defer waitEnter(bufio.NewReader(os.Stdin))
+	}
 	if *days < 1 {
 		*days = 1
 	}
