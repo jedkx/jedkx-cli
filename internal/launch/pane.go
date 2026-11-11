@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -130,6 +129,9 @@ const (
 )
 
 func isClaude(bin string) bool {
-	b := strings.ToLower(filepath.Base(bin))
+	b := strings.ToLower(bin)
+	if i := strings.LastIndexAny(b, `/\`); i >= 0 { // either separator, on any OS
+		b = b[i+1:]
+	}
 	return b == "claude" || b == "claude.exe" || b == "claude.cmd"
 }
