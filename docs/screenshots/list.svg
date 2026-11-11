@@ -113,35 +113,41 @@
 <text x="16.0" y="491.0" fill="#2a2a2a" xml:space="preserve">────────────────────────────────────────────────────────────────────────────────────────────────────────</text>
 <text x="32.8" y="509.0" fill="#6b6b6b" xml:space="preserve">› </text>
 <text x="49.6" y="509.0" fill="#bdbdbd" xml:space="preserve">add idempotency keys to POST /refunds</text>
-<text x="32.8" y="527.0" fill="#6b6b6b" xml:space="preserve">C:\dev\payments-api  4f1c2a9e  2026-11-10 20:29</text>
+<text x="32.8" y="527.0" fill="#6b6b6b" xml:space="preserve">C:\dev\payments-api  4f1c2a9e  2026-11-11 09:49</text>
 <text x="24.4" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">enter</text>
-<text x="74.8" y="563.0" fill="#6b6b6b" xml:space="preserve">open chat</text>
-<text x="167.2" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">/</text>
-<text x="184.0" y="563.0" fill="#6b6b6b" xml:space="preserve">search</text>
-<text x="251.2" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">←</text>
-<text x="268.0" y="563.0" fill="#6b6b6b" xml:space="preserve">close group</text>
-<text x="377.2" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">space</text>
-<text x="427.6" y="563.0" fill="#6b6b6b" xml:space="preserve">preview</text>
-<text x="503.2" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">n</text>
-<text x="520.0" y="563.0" fill="#6b6b6b" xml:space="preserve">new chat</text>
-<text x="604.0" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">c</text>
-<text x="620.8" y="563.0" fill="#6b6b6b" xml:space="preserve">copy command</text>
-<text x="738.4" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">e</text>
-<text x="755.2" y="563.0" fill="#6b6b6b" xml:space="preserve">export</text>
-<text x="24.4" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">tab</text>
-<text x="58.0" y="581.0" fill="#6b6b6b" xml:space="preserve">skills &amp; md</text>
-<text x="167.2" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">d</text>
-<text x="184.0" y="581.0" fill="#6b6b6b" xml:space="preserve">delete</text>
-<text x="251.2" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">s</text>
-<text x="268.0" y="581.0" fill="#6b6b6b" xml:space="preserve">sort</text>
-<text x="318.4" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">f</text>
-<text x="335.2" y="581.0" fill="#6b6b6b" xml:space="preserve">folder</text>
-<text x="402.4" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">p</text>
-<text x="419.2" y="581.0" fill="#6b6b6b" xml:space="preserve">pin</text>
-<text x="461.2" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">o</text>
-<text x="478.0" y="581.0" fill="#6b6b6b" xml:space="preserve">full screen</text>
-<text x="587.2" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">q</text>
-<text x="604.0" y="581.0" fill="#6b6b6b" xml:space="preserve">quit</text>
-<text x="654.4" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">?</text>
-<text x="671.2" y="581.0" fill="#6b6b6b" xml:space="preserve">help</text>
+<text x="74.8" y="563.0" fill="#6b6b6b" xml:space="preserve">open</text>
+<text x="125.2" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">t</text>
+<text x="142.0" y="563.0" fill="#6b6b6b" xml:space="preserve">new tab</text>
+<text x="217.6" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">n</text>
+<text x="234.4" y="563.0" fill="#6b6b6b" xml:space="preserve">new chat</text>
+<text x="318.4" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">/</text>
+<text x="335.2" y="563.0" fill="#6b6b6b" xml:space="preserve">search</text>
+<text x="402.4" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">a</text>
+<text x="419.2" y="563.0" fill="#6b6b6b" xml:space="preserve">archive</text>
+<text x="494.8" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">p</text>
+<text x="511.6" y="563.0" fill="#6b6b6b" xml:space="preserve">pin</text>
+<text x="553.6" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">r</text>
+<text x="570.4" y="563.0" fill="#6b6b6b" xml:space="preserve">rename</text>
+<text x="637.6" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">x</text>
+<text x="654.4" y="563.0" fill="#6b6b6b" xml:space="preserve">select</text>
+<text x="721.6" y="563.0" fill="#ff3333" font-weight="700" xml:space="preserve">space</text>
+<text x="772.0" y="563.0" fill="#6b6b6b" xml:space="preserve">preview</text>
+<text x="24.4" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">ctrl+r</text>
+<text x="83.2" y="581.0" fill="#6b6b6b" xml:space="preserve">refresh</text>
+<text x="158.8" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">d</text>
+<text x="175.6" y="581.0" fill="#6b6b6b" xml:space="preserve">delete</text>
+<text x="242.8" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">e</text>
+<text x="259.6" y="581.0" fill="#6b6b6b" xml:space="preserve">export</text>
+<text x="326.8" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">c</text>
+<text x="343.6" y="581.0" fill="#6b6b6b" xml:space="preserve">copy cmd</text>
+<text x="427.6" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">s</text>
+<text x="444.4" y="581.0" fill="#6b6b6b" xml:space="preserve">sort</text>
+<text x="494.8" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">f</text>
+<text x="511.6" y="581.0" fill="#6b6b6b" xml:space="preserve">folder</text>
+<text x="578.8" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">o</text>
+<text x="595.6" y="581.0" fill="#6b6b6b" xml:space="preserve">full screen</text>
+<text x="704.8" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">←</text>
+<text x="721.6" y="581.0" fill="#6b6b6b" xml:space="preserve">close group</text>
+<text x="830.8" y="581.0" fill="#ff3333" font-weight="700" xml:space="preserve">?</text>
+<text x="847.6" y="581.0" fill="#6b6b6b" xml:space="preserve">help</text>
 </svg>

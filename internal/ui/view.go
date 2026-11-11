@@ -428,18 +428,25 @@ func (m Model) hints() []string {
 		if m.folded[g] {
 			action = "open group"
 		}
-		return []string{"enter", action, "z", "close all", "/", "search", "v", "plain list", "q", "quit"}
+		return []string{"enter", action, "n", "new chat here", "x", "select folder", "z", "close all", "/", "search", "v", "plain list", "ctrl+r", "refresh", "q", "quit"}
 	}
 	if len(m.rows) == 0 {
 		return []string{"n", "new chat", "ctrl+r", "look again", "q", "quit"}
 	}
-	h := []string{"enter", "open chat", "/", "search"}
+	// most used first, short words: two lines hold the archive / pin / rename keys too
+	archive := "archive"
+	if m.archived {
+		archive = "restore"
+	}
+	h := []string{"enter", "open", "t", "new tab", "n", "new chat", "/", "search",
+		"a", archive, "p", "pin", "r", "rename", "x", "select", "space", "preview", "ctrl+r", "refresh",
+		"d", "delete", "e", "export", "c", "copy cmd", "s", "sort", "f", "folder", "o", "full screen"}
 	if m.flat {
-		h = append(h, "v", "group by project")
+		h = append(h, "v", "by project")
 	} else {
 		h = append(h, "←", "close group")
 	}
-	return append(h, "ctrl+r", "refresh", "space", "preview", "t", "new tab", "n", "new chat", "c", "copy command", "e", "export", "tab", "skills & md", "d", "delete", "s", "sort", "f", "folder", "p", "pin", "o", "full screen", "q", "quit")
+	return append(h, "tab", "skills & md", "q", "quit")
 }
 
 // keysWrap lays key hints over up to n lines; the last line ends with "? help".
