@@ -19,9 +19,15 @@ import (
 // ---------------------------------------------------------------- selection
 
 func (m *Model) refilter() {
-	q := m.search.Value()
+	raw := strings.TrimSpace(m.search.Value())
+	q := catalog.Parse(raw)
 	tool := toolFilters[m.tool]
 	m.view = m.view[:0]
+	var fuzzy []int
+	if m.score == nil {
+		m.score = map[int]int{}
+	}
+	clear(m.score)
 	for i, it := range m.res.Items {
 		if it.Archived != m.archived { // normal view hides archived; the archived tab shows only them
 			continue
@@ -29,11 +35,28 @@ func (m *Model) refilter() {
 		if tool != "" && it.Tool != tool {
 			continue
 		}
-		if !catalog.Matches(it, q) && !(q != "" && strings.TrimSpace(q) == m.deepQ && m.deep[it.Key()]) {
+		if !q.Filter(it) {
 			continue
 		}
+		sc, ok, fz := q.Match(it)
+		if !ok && raw != "" && raw == m.deepQ && m.deep[it.Key()] {
+			sc, ok = 1, true // found inside the chat's messages
+		}
+		if !ok {
+			continue
+		}
+		if fz {
+			fuzzy = append(fuzzy, i)
+			m.score[i] = sc
+			continue
+		}
+		m.score[i] = sc
 		m.view = append(m.view, i)
 	}
+	if len(m.view) == 0 { // typos forgiven only when nothing matches as typed
+		m.view = append(m.view, fuzzy...)
+	}
+	m.ranked = len(q.Terms()) > 0
 	m.sortView()
 	m.buildRows()
 	m.clamp()
@@ -50,6 +73,10 @@ func (m *Model) sortView() {
 		x, y := items[m.view[a]], items[m.view[b]]
 		if x.Pinned != y.Pinned {
 			return x.Pinned
+		}
+		// searching: best matches first (the title counts most), then the chosen order
+		if sx, sy := m.score[m.view[a]], m.score[m.view[b]]; m.ranked && mode == "recent" && sx != sy {
+			return sx > sy
 		}
 		switch mode {
 		case "name":

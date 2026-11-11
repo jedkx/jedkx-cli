@@ -128,18 +128,18 @@ func Sort(items []Item) {
 	})
 }
 
-// Matches is a case- and Turkish-insensitive search over the visible fields.
+// Matches is a case- and Turkish-insensitive search over the visible fields
+// (see Query for what a search line can say).
 func Matches(i Item, q string) bool {
-	if q == "" {
+	if strings.TrimSpace(q) == "" {
 		return true
 	}
-	hay := Fold(strings.Join([]string{i.Label(), i.Prompt, i.Project(), i.CWD, i.Branch, i.Tool, i.ID, strings.Join(i.Tags, " ")}, " "))
-	for _, w := range strings.Fields(Fold(q)) {
-		if !strings.Contains(hay, w) {
-			return false
-		}
+	p := Parse(q)
+	if !p.Filter(i) {
+		return false
 	}
-	return true
+	_, ok := p.Score(i)
+	return ok
 }
 
 var foldMap = strings.NewReplacer("İ", "i", "I", "i", "ı", "i", "Ş", "s", "ş", "s", "Ğ", "g", "ğ", "g", "Ü", "u", "ü", "u", "Ö", "o", "ö", "o", "Ç", "c", "ç", "c")

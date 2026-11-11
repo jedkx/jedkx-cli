@@ -568,7 +568,9 @@ func (m Model) helpView() string {
 			{"v", "group by project ⇄ flat list"},
 			{"s", "sort: recent → name → project → size"},
 			{"/", "search · esc clears"},
-			{"ctrl+f", "while searching: look inside every chat's messages"},
+			{"ctrl+f", "while searching: look inside every chat's messages (runs by itself when nothing matches)"},
+			{"search", `words in any order, typos forgiven · "exact words" · -leave-out`},
+			{"filters", "tool:codex  p:project  b:branch  #tag  since:3d  older:30d  is:pinned"},
 		}},
 		{"session", [][2]string{
 			{"p", "pin"},

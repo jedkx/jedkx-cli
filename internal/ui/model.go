@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jedkx/jedkx-cli/internal/account"
 	"os"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -155,6 +156,9 @@ type Model struct {
 	menuCursor  int
 	libCursor   int
 	libOffset   int
+	score       map[int]int     // item index → how well it matches the search
+	ranked      bool            // the search has words: best matches first
+	deepAuto    bool            // the inside-chat search started by itself (nothing matched)
 	deepQ       string          // query the inside-chat search ran for
 	deep        map[string]bool // chats whose text contains deepQ
 	notice      string          // a newer version: the UPDATE line in the header
@@ -542,8 +546,20 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.deepQ, m.deep = msg.q, msg.keys
 		m.refilter()
-		m.say(fmt.Sprintf("found inside %d chats", len(msg.keys)), false)
+		if len(msg.keys) == 0 {
+			m.say("not found inside the chats either", false)
+		} else {
+			m.say(fmt.Sprintf("found inside %d chats", len(msg.keys)), false)
+		}
 		return m, nil
+
+	case deepAutoMsg: // nothing matched and you stopped typing: look inside the chats
+		q := strings.TrimSpace(m.search.Value())
+		if string(msg) != q || len(m.view) > 0 || q == m.deepQ {
+			return m, nil
+		}
+		m.say("nothing in titles — searching inside chats…", false)
+		return m, m.deepCmd(q)
 
 	case moodStepMsg:
 		if time.Now().Before(m.moodUntil) {
@@ -679,6 +695,14 @@ type exportedMsg struct {
 	err  error
 }
 
+// deepAutoMsg: the query typed when the list went empty (sent after a pause).
+type deepAutoMsg string
+
+func (m Model) deepCmd(q string) tea.Cmd {
+	items := slices.Clone(m.res.Items) // the list may be re-sorted meanwhile
+	return func() tea.Msg { return deepMsg{q, deepSearch(items, q)} }
+}
+
 // deepMsg carries the chats whose text contains q (ctrl+f in search).
 type deepMsg struct {
 	q    string
@@ -689,7 +713,8 @@ type deepMsg struct {
 // deepSearch finds chats whose messages (not the log's JSON keys) contain every
 // word of q, folded like the list search so "islem" finds "İşlem".
 func deepSearch(items []catalog.Item, q string) map[string]bool {
-	words := strings.Fields(catalog.Fold(q))
+	query := catalog.Parse(q)
+	words, not := query.Terms(), query.Not
 	found := map[string]bool{}
 	var mu sync.Mutex
 	sem := make(chan struct{}, 4)
@@ -715,6 +740,11 @@ func deepSearch(items []catalog.Item, q string) map[string]bool {
 			hay := catalog.Fold(b.String())
 			for _, w := range words {
 				if !strings.Contains(hay, w) {
+					return
+				}
+			}
+			for _, w := range not {
+				if strings.Contains(hay, w) {
 					return
 				}
 			}

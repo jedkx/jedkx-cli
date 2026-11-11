@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
@@ -48,14 +49,16 @@ func (m Model) updateSearch(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		m.say("searching inside chats…", false)
-		items := slices.Clone(m.res.Items) // the list may be re-sorted meanwhile
-		return m, func() tea.Msg { return deepMsg{q, deepSearch(items, q)} }
+		return m, m.deepCmd(q)
 	}
 	before := m.search.Value()
 	var cmd tea.Cmd
 	m.search, cmd = m.search.Update(k)
 	if m.search.Value() != before {
 		m.refilter()
+		if q := strings.TrimSpace(m.search.Value()); len(m.view) == 0 && len([]rune(q)) >= 3 {
+			cmd = tea.Batch(cmd, tea.Tick(600*time.Millisecond, func(time.Time) tea.Msg { return deepAutoMsg(q) }))
+		}
 		if len(m.search.Value())%2 == 0 {
 			m.react(moodLookLeft)
 		} else {
