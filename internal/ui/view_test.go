@@ -331,3 +331,15 @@ func TestTabsNeverCut(t *testing.T) {
 		}
 	}
 }
+
+func TestTokStyleByContext(t *testing.T) {
+	if tokStyle(tokCount{Ctx: 50_000}).Render("x") != sRule.Render("x") {
+		t.Error("a quarter full stays faint")
+	}
+	if tokStyle(tokCount{Ctx: 170_000}).Render("x") != sCtxFull.Render("x") {
+		t.Error("85 % of 200k is near compact")
+	}
+	if tokStyle(tokCount{Ctx: 300_000}).Render("x") != sRule.Render("x") {
+		t.Error("300k is 30 % of a 1M window")
+	}
+}

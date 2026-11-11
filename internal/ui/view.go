@@ -317,7 +317,7 @@ func (m Model) list() string {
 		tok := ""
 		if m.w >= 56 { // tokens used, small, left of the time
 			if c, ok := m.tokens[it.Key()]; ok && c.N > 0 {
-				tok = sRule.Render(padLeft(tokShort(c.N), 5) + " ")
+				tok = tokStyle(c).Render(padLeft(tokShort(c.N), 5)) + " "
 			} else {
 				tok = "      "
 			}

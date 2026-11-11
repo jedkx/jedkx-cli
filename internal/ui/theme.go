@@ -31,6 +31,10 @@ var (
 	sSelBar = lipgloss.NewStyle().Foreground(cAccent).Bold(true)
 	sRule   = lipgloss.NewStyle().Foreground(cFaint)
 
+	// a chat's token count darkens toward red as its context fills (compact soon)
+	sCtxHalf = lipgloss.NewStyle().Foreground(lipgloss.Color("#6b5a2a")) // dark amber, ≥ 60 %
+	sCtxFull = lipgloss.NewStyle().Foreground(lipgloss.Color("#7a2a2a")) // dark red, ≥ 80 %
+
 	// monochrome like the portfolio: red stays reserved for focus and warnings
 	toolStyle = map[string]lipgloss.Style{
 		"claude": lipgloss.NewStyle().Foreground(cText),
