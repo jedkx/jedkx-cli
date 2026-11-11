@@ -94,7 +94,7 @@ Open a new terminal and run `jedkx-cli`.
 jedkx-cli                     the chat list
 jedkx-cli .                   only chats from this folder
 jedkx-cli last                continue the latest chat in this folder
-jedkx-cli stats [--days 7]    token use per day and in the last 5 hours
+jedkx-cli stats [--days 7]    token use per day and in the last 5 hours (each chat's tokens are also shown in the list, left of the time)
 jedkx-cli sessions [query]    print chats (--json, --tool claude|codex, --all)
 jedkx-cli clean               free disk: caches, snapshots, file history (--older 30: old chats)
 jedkx-cli plugins             Claude Code plugins and MCP servers (enable|disable|update|remove <id>)
@@ -117,7 +117,7 @@ jedkx-cli uninstall           remove it (--dry-run, --purge, --yes)
 | `c` `f` `e` | copy resume command, open folder, export to Markdown |
 | `d` | delete the chat's files (asks first) |
 | `/` | search: words in any order, typos forgiven, `"exact words"`, `-leave-out`, filters `tool:codex` `p:project` `b:branch` `#tag` `since:3d` `older:30d` `is:pinned`; best matches first; when nothing matches it looks inside the chats by itself (`ctrl+f` does it at once; typos forgiven there too, most hits first) |
-| `m` | more, a panel on the right (the list stays in view): `a` archive, `u` other tool (Claude ↔ Codex), `k` compact, `v` VS Code, `#` tags, `e` export, `c` copy command, `d` free disk, `o` old chats, `t` token use, `l` account, `!` notifications |
+| `m` | more, a panel on the right (the list stays in view); each line also works without `m`: `a` archive, `u` continue in Codex / Claude, `ctrl+k` compact, `.` VS Code, `#` tags, `e` / `ctrl+s` export, `c` / `y` copy command, `alt+c` free disk, `alt+o` delete old chats, `alt+l` account, `!` notifications |
 | `tab` | … │ skills & md │ plugins & mcp (enter on/off, u update, d remove) |
 | `tab` | all, claude, codex, archived, skills & md |
 | `!` | notifications: what happened, with the time |

@@ -314,6 +314,15 @@ func (m Model) list() string {
 		age := ageSt.Render(padLeft(ago(it.Updated), 4))
 		project, branch := "", ""
 		fixed := 2 + ansi.StringWidth(indent) + 2 + 4 + 1
+		tok := ""
+		if m.w >= 56 { // tokens used, small, left of the time
+			if c, ok := m.tokens[it.Key()]; ok && c.N > 0 {
+				tok = sRule.Render(padLeft(tokShort(c.N), 5) + " ")
+			} else {
+				tok = "      "
+			}
+			fixed += 6
+		}
 		// the tool's diamond leads the title; its name sits in one aligned column
 		mark, tool := "", ""
 		if m.w >= 24 {
@@ -338,7 +347,7 @@ func (m Model) list() string {
 			titleSt = sBold
 		}
 		title := titleSt.Render(padRight(ansi.Truncate(it.Label(), tw-1, "…"), tw))
-		b.WriteString(bar + indent + pin + mark + title + tool + project + branch + age + "\n")
+		b.WriteString(bar + indent + pin + mark + title + tool + project + branch + tok + age + "\n")
 	}
 	return b.String()
 }
@@ -540,13 +549,18 @@ func (m Model) helpView() string {
 			{"t", "open in a new tab"},
 			{"n", "new chat in the same folder, in a new tab"},
 			{"space", "preview: the last messages of the chat"},
-			{"c", "copy the resume command (paste it in any terminal)"},
-			{"e", "export the whole chat as Markdown (Downloads)"},
-			{"m", "more (a panel on the right): archive, other tool, compact, VS Code, tags, disk, usage, account — m then the key"},
+			{"c  y", "copy the resume command (paste it in any terminal)"},
+			{"e  ctrl+s", "export the whole chat as Markdown (Downloads)"},
+			{"m", "more: all of the below in a panel on the right"},
 			{"tab", "all · claude · codex · archived │ skills & md │ plugins & mcp"},
 			{"!", "notifications: what happened, with the time"},
 			{"u", "continue in the other tool (Claude ↔ Codex), in a new tab"},
 			{"#", "tags / a short note (search finds them)"},
+			{"ctrl+k", "compact the chat (/compact), in a new tab"},
+			{".", "open the project in VS Code"},
+			{"alt+c", "free disk: caches, snapshots, file history"},
+			{"alt+o", "delete chats older than 30 days"},
+			{"alt+l", "sign in with another Claude account"},
 		}},
 		{"select", [][2]string{
 			{"x", "select a chat — on a project: the whole folder"},

@@ -172,7 +172,7 @@ func (m Model) updateKeys(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.previewOn = !m.previewOn
 		m.previewKey = "" // read again for the current selection
 		m.clamp()
-	case "e": // the whole chat as Markdown in Downloads
+	case "e", "ctrl+s": // the whole chat as Markdown in Downloads
 		if keys := m.markedKeys(); len(keys) > 0 {
 			var items []catalog.Item
 			for _, it := range m.res.Items {
@@ -205,7 +205,13 @@ func (m Model) updateKeys(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 				return exportedMsg{p, err}
 			}
 		}
-	case "c": // copy the resume command, to run it anywhere
+	case "alt+c": // free disk (clean)
+		return self("clean")(m)
+	case "alt+o": // delete old chats
+		return self("clean", "--older", "30")(m)
+	case "alt+l": // sign in with another account
+		return m.run(exec.Command("claude", "/login"), "claude login", newTab, "")
+	case "c", "y": // copy the resume command, to run it anywhere (y: yank, as in vim)
 		if it, ok := m.selected(); ok {
 			if a := catalog.Adapter(it.Tool); a != nil {
 				if err := launch.Copy(launch.CommandLine(a.Resume(it.Session))); err != nil {
@@ -308,7 +314,7 @@ func (m Model) updateKeys(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 			cmd.Args = append(cmd.Args, "/compact")
 			return m.run(cmd, "compact "+it.Label(), newTab, "")
 		}
-	case "ctrl+o": // the project in VS Code
+	case "ctrl+o", ".": // the project in VS Code ("." as on GitHub)
 		if it, ok := m.selected(); ok {
 			if err := launch.Editor(it.CWD); err != nil {
 				m.say(err.Error(), true)

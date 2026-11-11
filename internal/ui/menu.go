@@ -27,6 +27,8 @@ func press(s string) func(Model) (tea.Model, tea.Cmd) {
 			k = tea.KeyMsg{Type: tea.KeyCtrlK}
 		case "ctrl+o":
 			k = tea.KeyMsg{Type: tea.KeyCtrlO}
+		case "y":
+			k = tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("c")}
 		default:
 			k = tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(s)}
 		}
@@ -56,16 +58,15 @@ func (m Model) menuItems() []menuItem {
 	}
 	return []menuItem{
 		{"a", archive, press("a")},
-		{"u", "continue in the other tool (Claude ↔ Codex)", press("u")},
-		{"k", "compact the chat (/compact)", press("ctrl+k")},
-		{"v", "open the project in VS Code", press("ctrl+o")},
+		{"u", "continue in Codex / Claude", press("u")},
+		{"ctrl+k", "compact the chat (/compact)", press("ctrl+k")},
+		{".", "open the project in VS Code", press("ctrl+o")},
 		{"#", "tags / a short note", press("#")},
 		{"e", "export the chat as Markdown", press("e")},
-		{"c", "copy the resume command", press("c")},
-		{"d", "free disk: caches, file history", self("clean")},
-		{"o", "delete chats older than 30 days", self("clean", "--older", "30")},
-		{"t", "token use (days, last 5 hours)", self("stats")},
-		{"l", "sign in with another Claude account", func(m Model) (tea.Model, tea.Cmd) {
+		{"y", "copy the resume command", press("y")},
+		{"alt+c", "free disk: caches, file history", self("clean")},
+		{"alt+o", "delete chats older than 30 days", self("clean", "--older", "30")},
+		{"alt+l", "sign in with another Claude account", func(m Model) (tea.Model, tea.Cmd) {
 			return m.run(exec.Command("claude", "/login"), "claude login", newTab, "")
 		}},
 		{"!", "notifications", press("!")},
@@ -121,11 +122,11 @@ func (m Model) menuLines(w int) []string {
 		if i == m.menuCursor {
 			bar, label = sSelBar.Render("▌ "), sBold.Render(it.label)
 		}
-		out = append(out, fit(bar+sAccent.Render(it.key)+"  "+label))
+		out = append(out, fit(bar+sAccent.Render(padRight(it.key, 6))+" "+label))
 	}
 	return append(out,
 		sRule.Render(strings.Repeat("─", w)),
-		fit(" "+keys("key", "do it", "↑ ↓ enter", "pick", "esc", "close")))
+		fit(" "+keys("key", "do it (works without m too)", "esc", "close")))
 }
 
 // menuView is the full-screen menu for narrow terminals.

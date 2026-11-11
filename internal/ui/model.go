@@ -156,13 +156,14 @@ type Model struct {
 	menuCursor  int
 	libCursor   int
 	libOffset   int
-	score       map[int]int    // item index → how well it matches the search
-	ranked      bool           // the search has words: best matches first
-	deepAuto    bool           // the inside-chat search started by itself (nothing matched)
-	deepQ       string         // query the inside-chat search ran for
-	deep        map[string]int // chats whose text matches deepQ → how well
-	notice      string         // a newer version: the UPDATE line in the header
-	updState    int            // updAvailable … updFailed
+	tokens      map[string]tokCount // chat key → tokens used (counted in the background)
+	score       map[int]int         // item index → how well it matches the search
+	ranked      bool                // the search has words: best matches first
+	deepAuto    bool                // the inside-chat search started by itself (nothing matched)
+	deepQ       string              // query the inside-chat search ran for
+	deep        map[string]int      // chats whose text matches deepQ → how well
+	notice      string              // a newer version: the UPDATE line in the header
+	updState    int                 // updAvailable … updFailed
 	updErr      error
 	revealed    int // characters of the info block shown so far (text-reveal)
 }
@@ -408,10 +409,15 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if keep == "" {
 			m.firstSession()
 		}
+		count := countTokens(slices.Clone(m.res.Items), m.tokens)
 		if m.lib { // project files depend on the chats: refresh the library
-			return m, m.loadLibrary()
+			return m, tea.Batch(m.loadLibrary(), count)
 		}
 		m.libItems = nil // scanned again on the next visit
+		return m, count
+
+	case tokensMsg:
+		m.tokens = msg
 		return m, nil
 
 	case focusMsg:
