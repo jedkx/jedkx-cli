@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
@@ -109,6 +110,12 @@ func CleanText(s string, max int) string {
 	}
 	return b.String()
 }
+
+// pastedTag is Claude Code's wrapper around pasted text (<pasted_content id="…">…</pasted_content>).
+var pastedTag = regexp.MustCompile(`</?pasted_content[^>]*>`)
+
+// Unpaste drops that wrapper so a pasted prompt counts as typed text, not as an injected tag.
+func Unpaste(s string) string { return pastedTag.ReplaceAllString(s, "") }
 
 // IsNoise reports prompts that are machine-injected rather than typed by the user.
 func IsNoise(s string) bool {

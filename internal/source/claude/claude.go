@@ -181,6 +181,7 @@ func promptText(raw json.RawMessage) string {
 	}
 	var str string
 	if json.Unmarshal(m.Content, &str) == nil {
+		str = source.Unpaste(str)
 		if source.IsNoise(str) {
 			return ""
 		}
@@ -192,8 +193,8 @@ func promptText(raw json.RawMessage) string {
 	}
 	if json.Unmarshal(m.Content, &blocks) == nil {
 		for _, b := range blocks {
-			if b.Type == "text" && !source.IsNoise(b.Text) {
-				return source.CleanText(b.Text, 200)
+			if t := source.Unpaste(b.Text); b.Type == "text" && !source.IsNoise(t) {
+				return source.CleanText(t, 200)
 			}
 		}
 	}
@@ -259,6 +260,7 @@ func rawText(raw json.RawMessage) string {
 	}
 	var str string
 	if json.Unmarshal(m.Content, &str) == nil {
+		str = source.Unpaste(str)
 		if source.IsNoise(str) {
 			return ""
 		}
@@ -273,8 +275,8 @@ func rawText(raw json.RawMessage) string {
 	}
 	var parts []string
 	for _, b := range blocks {
-		if b.Type == "text" && !source.IsNoise(b.Text) {
-			parts = append(parts, strings.TrimSpace(b.Text))
+		if t := source.Unpaste(b.Text); b.Type == "text" && !source.IsNoise(t) {
+			parts = append(parts, strings.TrimSpace(t))
 		}
 	}
 	return strings.Join(parts, "\n\n")
