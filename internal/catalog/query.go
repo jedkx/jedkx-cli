@@ -3,8 +3,11 @@ package catalog
 import (
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
+
+	"github.com/jedkx/jedkx-cli/internal/source"
 )
 
 // Query is a parsed search. Plain words must all be found (in the title, first
@@ -378,4 +381,45 @@ func (q Query) TextMatch(hay string) (int, bool) {
 		score++
 	}
 	return score, true
+}
+
+// SearchText reads every chat, a few at a time, and returns the keys of those
+// whose messages (not the log's JSON keys) contain q, with their scores. Words
+// are folded like the list search, so "islem" finds "İşlem".
+func SearchText(items []Item, q string) map[string]int {
+	query := Parse(q)
+	found := map[string]int{}
+	if len(query.Terms()) == 0 {
+		return found
+	}
+	var mu sync.Mutex
+	sem := make(chan struct{}, 4)
+	var wg sync.WaitGroup
+	for _, it := range items {
+		tr, ok := Adapter(it.Tool).(source.Transcriber)
+		if !ok {
+			continue
+		}
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(it Item) {
+			defer func() { <-sem; wg.Done() }()
+			turns, err := tr.Transcript(it.Session)
+			if err != nil {
+				return
+			}
+			var b strings.Builder
+			for _, t := range turns {
+				b.WriteString(t.Text)
+				b.WriteByte('\n')
+			}
+			if sc, ok := query.TextMatch(Fold(b.String())); ok {
+				mu.Lock()
+				found[it.Key()] = sc
+				mu.Unlock()
+			}
+		}(it)
+	}
+	wg.Wait()
+	return found
 }

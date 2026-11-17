@@ -29,6 +29,10 @@ func ConfigDir() string {
 	return filepath.Join(d, app.Name)
 }
 
+// ShareDir holds the skills and instructions Claude Code and Codex share
+// (`jedkx-cli share`). It is the user's own data, inside ConfigDir.
+func ShareDir() string { return filepath.Join(ConfigDir(), "share") }
+
 // CacheDir holds rebuildable data (scan index, update state). Always removed on uninstall.
 // Windows: %LOCALAPPDATA%\jedkx-cli.
 func CacheDir() string {

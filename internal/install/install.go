@@ -21,6 +21,7 @@ import (
 	"github.com/jedkx/jedkx-cli/internal/config"
 	"github.com/jedkx/jedkx-cli/internal/paths"
 	"github.com/jedkx/jedkx-cli/internal/setup"
+	"github.com/jedkx/jedkx-cli/internal/share"
 	"github.com/jedkx/jedkx-cli/internal/update"
 )
 
@@ -226,6 +227,9 @@ func Uninstall(opt Options, in io.Reader, out io.Writer) error {
 	steps = append(steps, step{"jedkx look  Claude Code status line + theme, Windows Terminal profile (put back as before)",
 		func() error { return setup.Undo(io.Discard) },
 		func() bool { c, t := setup.Applied(); return !c && !t }})
+	steps = append(steps, step{"share       skills + AGENTS.md back into each tool, MCP server removed",
+		func() error { return share.Undo(io.Discard) },
+		func() bool { return !share.Applied() }})
 	cache := paths.CacheDir()
 	steps = append(steps, step{"cache       " + cache, func() error { return os.RemoveAll(cache) }, func() bool { return !exists(cache) }})
 
@@ -277,6 +281,9 @@ func Uninstall(opt Options, in io.Reader, out io.Writer) error {
 		steps = append(steps, step{"your data   " + data, func() error {
 			if c, t := setup.Applied(); c || t { // undo failed: keep setup.json, it holds the old values
 				return errors.New("kept: the jedkx look could not be undone, its saved values are in setup.json")
+			}
+			if share.Applied() { // the shared skills / AGENTS.md live in here
+				return errors.New("kept: share could not be undone, the shared skills are in " + paths.ShareDir())
 			}
 			return os.RemoveAll(data)
 		}, func() bool { return !exists(data) }})

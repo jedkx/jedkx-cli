@@ -8,7 +8,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 	"unicode"
 
@@ -22,6 +21,7 @@ import (
 	"github.com/jedkx/jedkx-cli/internal/library"
 	"github.com/jedkx/jedkx-cli/internal/meta"
 	"github.com/jedkx/jedkx-cli/internal/plugins"
+	"github.com/jedkx/jedkx-cli/internal/share"
 	"github.com/jedkx/jedkx-cli/internal/source"
 	"github.com/jedkx/jedkx-cli/internal/update"
 )
@@ -78,7 +78,8 @@ func (m Model) setTab(i int) (tea.Model, tea.Cmd) {
 		m.refilter()
 		return m, nil
 	}
-	m.lib, m.archived, m.libCursor, m.libOffset = true, false, 0, 0
+	m.lib, m.archived, m.libCursor, m.libOffset, m.shareAsk = true, false, 0, 0, false
+	m.shareItems = loadShare()
 	if m.libItems == nil {
 		m.say("scanning skills and instruction files…", false)
 		return m, m.loadLibrary()
@@ -155,6 +156,9 @@ type Model struct {
 	menu        bool   // m: the "more" menu
 	menuCursor  int
 	libCursor   int
+	shareItems  []share.Item // skills / md / chats shared between the tools (nil: not possible here)
+	shareAsk    bool         // "share …? y/n"
+	shareBusy   bool
 	libOffset   int
 	tokens      map[string]tokCount // chat key → tokens used (counted in the background)
 	score       map[int]int         // item index → how well it matches the search
@@ -435,6 +439,17 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.say("already open in the tab \""+msg.title+"\" (could not switch to it)", false)
 		}
 		return m, nil
+	case shareDoneMsg:
+		m.shareBusy = false
+		m.shareItems = loadShare()
+		if msg.err != nil {
+			m.say(msg.err.Error(), true)
+			m.react(moodSurprised)
+		} else {
+			m.say(msg.done, false)
+			m.react(moodHappy)
+		}
+		return m, m.loadLibrary() // skills and md files moved
 	case plugListMsg:
 		m.plugBusy = ""
 		if msg.err != nil {
@@ -723,46 +738,8 @@ type deepMsg struct {
 	keys map[string]int
 }
 
-// deepSearch reads every chat file, a few at a time, looking for q.
-// deepSearch finds chats whose messages (not the log's JSON keys) contain every
-// word of q, folded like the list search so "islem" finds "İşlem".
-func deepSearch(items []catalog.Item, q string) map[string]int {
-	query := catalog.Parse(q)
-	found := map[string]int{}
-	if len(query.Terms()) == 0 {
-		return found
-	}
-	var mu sync.Mutex
-	sem := make(chan struct{}, 4)
-	var wg sync.WaitGroup
-	for _, it := range items {
-		tr, ok := catalog.Adapter(it.Tool).(source.Transcriber)
-		if !ok {
-			continue
-		}
-		wg.Add(1)
-		sem <- struct{}{}
-		go func(it catalog.Item) {
-			defer func() { <-sem; wg.Done() }()
-			turns, err := tr.Transcript(it.Session)
-			if err != nil {
-				return
-			}
-			var b strings.Builder
-			for _, t := range turns {
-				b.WriteString(t.Text)
-				b.WriteByte(10)
-			}
-			if sc, ok := query.TextMatch(catalog.Fold(b.String())); ok {
-				mu.Lock()
-				found[it.Key()] = sc
-				mu.Unlock()
-			}
-		}(it)
-	}
-	wg.Wait()
-	return found
-}
+// deepSearch finds chats whose messages contain q (see catalog.SearchText).
+func deepSearch(items []catalog.Item, q string) map[string]int { return catalog.SearchText(items, q) }
 
 type moodStepMsg struct{ face []string }
 

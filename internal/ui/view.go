@@ -546,6 +546,7 @@ func (m Model) helpView() string {
 			{"e  ctrl+s", "export the whole chat as Markdown (Downloads)"},
 			{"m", "more: all of the below in a panel on the right"},
 			{"tab", "all · claude · codex · archived │ skills & md │ plugins & mcp"},
+			{"S", "in skills & md: share skills, AGENTS.md and chats between Claude Code and Codex"},
 			{"!", "notifications: what happened, with the time"},
 			{"u", "continue in the other tool (Claude ↔ Codex), in a new tab"},
 			{"#", "tags / a short note (search finds them)"},

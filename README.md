@@ -22,6 +22,8 @@ in the right folder. The only thing it stores is your own names, pins and archiv
 - Rename, pin, archive, delete; select several (`x`, `ctrl+a`) and act on all of them
 - Export a chat to Markdown (`e`), copy its resume command (`c`), open its folder (`f`)
 - A **skills & md** tab with your skills, agents, commands and `CLAUDE.md` / `AGENTS.md` files
+- Optional **share**: Claude Code and Codex use the same skills and the same global `AGENTS.md`, and
+  each app can list, read and search the other's chats (see [Share](#share))
 - `jedkx-cli stats` for token use per day (Claude Code)
 - A Claude Code status line
 - Which account Claude Code and Codex are signed in with, shown quietly in the list header and the status line
@@ -98,6 +100,7 @@ jedkx-cli stats [--days 7]    token use per day and in the last 5 hours (each ch
 jedkx-cli sessions [query]    print chats (--json, --tool claude|codex, --all)
 jedkx-cli clean               free disk: caches, snapshots, file history (--older 30: old chats)
 jedkx-cli plugins             Claude Code plugins and MCP servers (enable|disable|update|remove <id>)
+jedkx-cli share [on|off]      shared skills + AGENTS.md, chats seen from both apps (--only skills,md,mcp, --dry-run)
 jedkx-cli login [codex]       sign in with another account
 jedkx-cli setup               theme and terminal profile (--only claude|terminal, --undo)
 jedkx-cli config [key [on|off]]   update.check, update.auto, animation, claude, codex
@@ -144,6 +147,27 @@ Only want the status line?
 "statusLine": { "type": "command", "command": "jedkx-cli statusline" }
 ```
 
+## Share
+
+`jedkx-cli share on` (or `S` in the skills & md tab, or the **share** choice of the installer) keeps
+one copy of what both tools read, so a change made in Claude Code shows up in Codex and the other way
+round — in the terminal, the desktop apps and the IDE extensions alike:
+
+| Part | How |
+|---|---|
+| `skills` | `~/.claude/skills` and `~/.codex/skills` become links (a junction on Windows) to one folder |
+| `md` | `~/.codex/AGENTS.md` links to one shared `AGENTS.md`; `~/.claude/CLAUDE.md` gets one marked `@…/AGENTS.md` import line |
+| `mcp` | a small MCP server, `jedkx-cli _mcp`, added with the tools' own `claude mcp add` / `codex mcp add`: ask either app to list, search or read a chat of the other one and carry on |
+
+The shared folder is `%APPDATA%\jedkx-cli\share` (`~/.config/jedkx-cli/share`). Before anything moves,
+both tools' files are copied into its `backup` folder. Skills with the same name and different content
+stop it before anything changes. `share status` shows what is shared; if an editor replaced the linked
+`AGENTS.md` with a new file, `share on` again takes the newer text and links it back.
+
+`jedkx-cli share off` (and uninstall) gives each tool real files again holding the shared content,
+so nothing is lost. If the `claude` / `codex` command is not on PATH (desktop app only), share prints
+the one `mcp add` line to run yourself.
+
 ## Uninstall
 
 ```
@@ -177,6 +201,8 @@ internal/source      reading sessions (claude/, codex/), cache
 internal/catalog     scan, merge, search, sort
 internal/meta        names, pins, archive
 internal/library     skills and instruction files
+internal/share       one set of skills / AGENTS.md for both tools (share on|off)
+internal/mcp         the read-only MCP server both tools start (jedkx-cli _mcp)
 internal/ui          the TUI
 internal/statusline  Claude Code status line
 internal/setup       theme / terminal profile and undo

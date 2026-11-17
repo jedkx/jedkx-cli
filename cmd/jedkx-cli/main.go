@@ -19,9 +19,11 @@ import (
 	"github.com/jedkx/jedkx-cli/internal/config"
 	"github.com/jedkx/jedkx-cli/internal/install"
 	"github.com/jedkx/jedkx-cli/internal/launch"
+	"github.com/jedkx/jedkx-cli/internal/mcp"
 	"github.com/jedkx/jedkx-cli/internal/meta"
 	"github.com/jedkx/jedkx-cli/internal/paths"
 	"github.com/jedkx/jedkx-cli/internal/setup"
+	"github.com/jedkx/jedkx-cli/internal/share"
 	"github.com/jedkx/jedkx-cli/internal/source"
 	"github.com/jedkx/jedkx-cli/internal/stats"
 	"github.com/jedkx/jedkx-cli/internal/statusline"
@@ -44,6 +46,7 @@ Usage:
   jedkx-cli uninstall         remove everything jedkx-cli added (--dry-run, --purge, --yes)
   jedkx-cli clean             free disk: caches, snapshots, file history (--older 30: old chats)
   jedkx-cli plugins           Claude Code plugins and MCP servers (enable|disable|update|remove <id>)
+  jedkx-cli share [on|off]    one set of skills + AGENTS.md for Claude Code and Codex, each app sees the other's chats (--only skills,md,mcp, --dry-run)
   jedkx-cli login [codex]     sign in with another account (claude by default)
   jedkx-cli statusline        Claude Code status line (settings.json statusLine)
   jedkx-cli nox               say hi to Nox
@@ -58,6 +61,15 @@ func main() {
 	// Claude's SessionStart hook: paint the tab in the project's grey, never fail.
 	if len(os.Args) > 1 && os.Args[1] == launch.TabColorCommand {
 		os.Exit(launch.RunTabColor(os.Args[2:]))
+	}
+	// The MCP server Claude Code / Codex start (jedkx-cli share): stdout is the
+	// protocol, so nothing else may print; no update or setup work either.
+	if len(os.Args) > 1 && os.Args[1] == share.MCPCommand {
+		if err := mcp.Serve(os.Stdin, os.Stdout); err != nil {
+			fmt.Fprintln(os.Stderr, "jedkx-cli mcp:", err)
+			os.Exit(1)
+		}
+		return
 	}
 	// Claude calls this on every message: no config, no update work, never fail.
 	if len(os.Args) > 1 && os.Args[1] == "statusline" {
@@ -107,6 +119,8 @@ func main() {
 		err = doClean(cfg, args)
 	case "plugins", "plugin":
 		err = doPlugins(args)
+	case "share":
+		err = doShare(args)
 	case "login":
 		err = doLogin(args)
 	case "nox":
@@ -185,16 +199,23 @@ func wizard() (err error) {
 		what, detail  string
 		parts         setup.Parts
 		claude, codex bool // whose chats the list shows
+		share         bool // one set of skills / AGENTS.md, chats seen from both apps
 	}
+	canShare := share.Available()
 	choices := []choice{
-		{"everything", "Claude Code + Codex chats, Claude Code look, terminal look", setup.All, true, true},
-		{"Claude only", "Claude Code chats + Claude Code look; no Codex, terminal untouched", setup.Parts{Claude: true}, true, false},
-		{"Codex only", "Codex chats; Claude Code and the terminal untouched", setup.Parts{}, false, true},
-		{"terminal only", "all chats + a jedkx-cli terminal profile, grey tabs; Claude Code untouched", setup.Parts{Terminal: true}, true, true},
-		{"just the app", "all chats; no other setting changes", setup.Parts{}, true, true},
+		{"everything", "Claude Code + Codex chats, Claude Code look, terminal look, share", setup.All, true, true, canShare},
+		{"Claude only", "Claude Code chats + Claude Code look; no Codex, terminal untouched", setup.Parts{Claude: true}, true, false, false},
+		{"Codex only", "Codex chats; Claude Code and the terminal untouched", setup.Parts{}, false, true, false},
+		{"terminal only", "all chats + a jedkx-cli terminal profile, grey tabs; Claude Code untouched", setup.Parts{Terminal: true}, true, true, false},
+		{"share", "same skills + AGENTS.md in Claude Code and Codex, each app sees the other's chats", setup.Parts{}, true, true, true},
+		{"just the app", "all chats; no other setting changes", setup.Parts{}, true, true, false},
 	}
 	for i, c := range choices {
-		fmt.Println("   " + ui.Accent(fmt.Sprint(i+1)) + "  " + ui.Bold(fmt.Sprintf("%-14s", c.what)) + ui.Muted(c.detail))
+		detail := ui.Muted(c.detail)
+		if c.what == "share" && !canShare {
+			detail = ui.Dim("needs both Claude Code and Codex on this PC")
+		}
+		fmt.Println("   " + ui.Accent(fmt.Sprint(i+1)) + "  " + ui.Bold(fmt.Sprintf("%-14s", c.what)) + detail)
 	}
 	last := len(choices)
 	installed := install.Installed()
@@ -233,6 +254,7 @@ func wizard() (err error) {
 	// several picks add up: "2 4" = Claude Code look + terminal profile. Only
 	// "Claude only" / "Codex only" limit whose chats are listed.
 	var parts setup.Parts
+	wantShare := false
 	show := map[string]bool{}
 	limited := false
 	for _, p := range picks {
@@ -242,6 +264,7 @@ func wizard() (err error) {
 		c := choices[p-1]
 		parts.Claude = parts.Claude || c.parts.Claude
 		parts.Terminal = parts.Terminal || c.parts.Terminal
+		wantShare = wantShare || c.share
 		if c.claude != c.codex {
 			limited = true
 			show["claude"] = show["claude"] || c.claude
@@ -250,6 +273,10 @@ func wizard() (err error) {
 	}
 	if !limited {
 		show = map[string]bool{"claude": true, "codex": true}
+	}
+	if wantShare && (limited || !canShare) {
+		fmt.Println("  " + ui.Dim("· share skipped: it needs both Claude Code and Codex"))
+		wantShare = false
 	}
 	if len(picks) > 1 {
 		var names []string
@@ -264,6 +291,9 @@ func wizard() (err error) {
 	total := 1 // install
 	if parts.Claude || parts.Terminal {
 		total = 3 // backup, install, restyle
+	}
+	if wantShare {
+		total++
 	}
 	n := 0
 	step := func(what string) {
@@ -302,6 +332,20 @@ func wizard() (err error) {
 		if err := setup.Apply(paths.InstalledExe(), parts, os.Stdout); err != nil {
 			fmt.Println("\n  " + ui.Accent("Some of the jedkx look could not be applied (see ! above).") + " jedkx-cli itself is installed.")
 			fmt.Println("  " + ui.Dim("Fix it and run: jedkx-cli setup"))
+		}
+	}
+	if wantShare {
+		step("share")
+		for _, l := range share.Plan(share.All) {
+			fmt.Println("  " + ui.Dim("· "+l))
+		}
+		fmt.Print("\n  " + ui.Bold("Share them?") + " " + ui.Dim("a copy is kept in the share folder; undo: jedkx-cli share off  [Y/n]") + " ")
+		if yes(r, true) {
+			if err := share.Apply(paths.InstalledExe(), share.All, os.Stdout); err != nil {
+				fmt.Println("\n  " + ui.Accent("Some of it could not be shared (see ! above).") + " " + ui.Dim("Fix it and run: jedkx-cli share on"))
+			}
+		} else {
+			fmt.Println("  " + ui.Dim("skipped · later: jedkx-cli share on"))
 		}
 	}
 
