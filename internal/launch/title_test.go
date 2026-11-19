@@ -32,8 +32,8 @@ func TestTabTitleOnlyInOurTabs(t *testing.T) {
 func TestClaimMovesTheMarker(t *testing.T) {
 	t.Setenv("LOCALAPPDATA", t.TempDir())
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
-	claim("claude:old", 4242, "old chat", "tab")
-	claim("claude:new", 4242, "new chat", "tab") // /clear in the same tab
+	claim("claude:old", os.Getpid(), "old chat", "tab")
+	claim("claude:new", os.Getpid(), "new chat", "tab") // /clear in the same tab
 	if _, err := os.Stat(markerFile("claude:old")); err == nil {
 		t.Fatal("the chat that left the tab keeps a marker")
 	}

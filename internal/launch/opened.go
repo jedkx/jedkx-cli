@@ -19,6 +19,7 @@ import (
 // Opened is a running chat that jedkx-cli started.
 type Opened struct {
 	PID   int    `json:"pid"`
+	Start int64  `json:"start"` // the process's start time: a reused pid is not this process
 	Title string `json:"title"`
 	Where string `json:"where"` // "pane" or "tab"
 }
@@ -48,8 +49,8 @@ func IsOpen(key string) (Opened, bool) {
 		return Opened{}, false
 	}
 	var o Opened
-	if json.Unmarshal(b, &o) != nil || o.PID <= 0 || !alive(o.PID) {
-		_ = os.Remove(f) // left behind by a closed window
+	if json.Unmarshal(b, &o) != nil || o.PID <= 0 || o.Start == 0 || started(o.PID) != o.Start {
+		_ = os.Remove(f) // left behind by a closed window (its pid may run another program now)
 		return Opened{}, false
 	}
 	return o, true
@@ -63,33 +64,44 @@ func claim(key string, pid int, title, where string) {
 	if key == "" || pid <= 0 || title == "" {
 		return
 	}
-	f := markerFile(key)
-	entries, _ := os.ReadDir(openDir())
-	for _, e := range entries {
-		p := filepath.Join(openDir(), e.Name())
-		if p == f {
-			continue
-		}
-		var o Opened
-		if b, err := os.ReadFile(p); err == nil && json.Unmarshal(b, &o) == nil && o.PID == pid {
-			_ = os.Remove(p) // that chat is no longer in this tab
-		}
+	start := started(pid)
+	if start == 0 {
+		return
 	}
-	b, _ := json.Marshal(Opened{PID: pid, Title: title, Where: where})
+	f := markerFile(key)
+	dropPID(pid, f) // that chat is no longer in this tab
+	b, _ := json.Marshal(Opened{PID: pid, Start: start, Title: title, Where: where})
 	if os.MkdirAll(openDir(), 0o755) == nil {
 		_ = os.WriteFile(f, b, 0o600)
 	}
 }
 
-// mark writes the marker for this process; the returned func removes it.
+// dropPID removes the markers of process pid, except keep.
+func dropPID(pid int, keep string) {
+	entries, _ := os.ReadDir(openDir())
+	for _, e := range entries {
+		p := filepath.Join(openDir(), e.Name())
+		if p == keep {
+			continue
+		}
+		var o Opened
+		if b, err := os.ReadFile(p); err == nil && json.Unmarshal(b, &o) == nil && o.PID == pid {
+			_ = os.Remove(p)
+		}
+	}
+}
+
+// mark writes the marker for this process; the returned func removes it and
+// any marker the tab hook claimed for this process (a new chat, or after /clear).
 func mark(key, title, where string) func() {
+	pid := os.Getpid()
+	done := func() { dropPID(pid, "") }
 	if key == "" {
-		return func() {}
+		return done
 	}
-	f := markerFile(key)
-	b, _ := json.Marshal(Opened{PID: os.Getpid(), Title: title, Where: where})
-	if os.MkdirAll(openDir(), 0o755) != nil || os.WriteFile(f, b, 0o600) != nil {
-		return func() {}
+	b, _ := json.Marshal(Opened{PID: pid, Start: started(pid), Title: title, Where: where})
+	if os.MkdirAll(openDir(), 0o755) == nil {
+		_ = os.WriteFile(markerFile(key), b, 0o600)
 	}
-	return func() { _ = os.Remove(f) }
+	return done
 }

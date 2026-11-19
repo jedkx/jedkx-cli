@@ -26,6 +26,25 @@ func alive(pid int) bool {
 	return code == stillActive
 }
 
+// started is when process pid was created (0 if it does not run). With the pid it
+// names one process: Windows hands a freed pid to the next process soon.
+func started(pid int) int64 {
+	h, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
+	if err != nil {
+		return 0
+	}
+	defer windows.CloseHandle(h)
+	var c, e, k, u windows.Filetime
+	if windows.GetProcessTimes(h, &c, &e, &k, &u) != nil {
+		return 0
+	}
+	var code uint32
+	if windows.GetExitCodeProcess(h, &code) != nil || code != stillActive {
+		return 0
+	}
+	return c.Nanoseconds()
+}
+
 // stopTree ends the tool and anything it started (node, shells, MCP servers).
 func stopTree(p *os.Process) {
 	if err := exec.Command("taskkill", "/T", "/F", "/PID", strconv.Itoa(p.Pid)).Run(); err != nil {

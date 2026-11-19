@@ -71,3 +71,15 @@ func TestOpenedMarker(t *testing.T) {
 		t.Fatal("stale marker not removed")
 	}
 }
+
+// A marker whose pid now runs another process (Windows reuses pids) is stale.
+func TestOpenedMarkerReusedPID(t *testing.T) {
+	t.Setenv("LOCALAPPDATA", t.TempDir())
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	_ = os.MkdirAll(openDir(), 0o755)
+	b := []byte(`{"pid":` + strconv.Itoa(os.Getpid()) + `,"start":12345,"title":"x","where":"tab"}`)
+	_ = os.WriteFile(markerFile("claude:r"), b, 0o600)
+	if _, ok := IsOpen("claude:r"); ok && started(os.Getpid()) != 1 {
+		t.Fatal("marker of a reused pid counts as open")
+	}
+}
